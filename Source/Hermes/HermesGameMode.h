@@ -13,6 +13,19 @@ class AHermesGameMode : public AGameModeBase
 
 public:
 	AHermesGameMode();
+
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+	UPROPERTY(EditAnywhere)
+	TArray<TSubclassOf<class ACharacter>> InitCharacters;
+
+
+	UPROPERTY(EditAnywhere)
+	FVector InitPosition;
+
+	UPROPERTY(EditAnywhere)
+	int32 InitInterval;
+
 };
 
 

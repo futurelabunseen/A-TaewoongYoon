@@ -3,13 +3,32 @@
 #include "HermesGameMode.h"
 #include "HermesCharacter.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Engine/World.h"
 
 AHermesGameMode::AHermesGameMode()
 {
-	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/ThirdPerson/Blueprints/BP_ThirdPersonCharacter"));
-	if (PlayerPawnBPClass.Class != NULL)
+}
+
+void AHermesGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	if (GetWorld())
 	{
-		DefaultPawnClass = PlayerPawnBPClass.Class;
+		FVector SpawnPosition = InitPosition;
+		bool possessPlayer = false;
+
+		for (const auto& initChar : InitCharacters)
+		{
+			APawn* SpawnedActor = CastChecked<APawn>(GetWorld()->SpawnActor(initChar));
+			if (SpawnedActor)
+			{
+				SpawnedActor->SetActorLocation(SpawnPosition);
+				SpawnPosition.X += InitInterval;
+				if (!possessPlayer)
+				{
+					NewPlayer->Possess(SpawnedActor);
+					possessPlayer = true;
+				}
+			}
+		}
 	}
 }

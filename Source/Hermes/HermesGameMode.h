@@ -17,7 +17,7 @@ public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 	UPROPERTY(EditAnywhere)
-	TArray<TSubclassOf<class ACharacter>> InitCharacters;
+	TArray<TSubclassOf<class AHermesCharacter>> InitCharacters;
 
 
 	UPROPERTY(EditAnywhere)

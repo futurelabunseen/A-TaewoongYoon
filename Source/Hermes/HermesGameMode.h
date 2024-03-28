@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -16,12 +16,9 @@ public:
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+private:
 	UPROPERTY(EditAnywhere)
 	TArray<TSubclassOf<class AHermesCharacter>> InitCharacters;
-
-
-	UPROPERTY(EditAnywhere)
-	FVector InitPosition;
 
 	UPROPERTY(EditAnywhere)
 	int32 InitInterval;

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "HermesPlayerController.h"
@@ -26,7 +26,13 @@ void AHermesPlayerController::ChangeToNextChar()
 	AHermesCharacter* currentChar = CastChecked<AHermesCharacter>(GetCharacter());
 	if (IsValid(currentChar->NextCharacter.Get()))
 	{
-		Possess(currentChar->NextCharacter.Get());
+		if(AController* NextController = currentChar->NextCharacter.Get()->GetController())
+		{
+			NextController->UnPossess();//빙의중인 Controller빙의 해제
+			UnPossess();
+			Possess(currentChar->NextCharacter.Get());//다음 캐릭터 빙의
+			currentChar->GetAIController()->Possess(currentChar);//다시 인공지능컨트롤러에 의해 빙의됨
+		}
 	}
 }
 
@@ -35,6 +41,12 @@ void AHermesPlayerController::ChangeToPreviousChar()
 	AHermesCharacter* currentChar = CastChecked<AHermesCharacter>(GetCharacter());
 	if (IsValid(currentChar->PreviousCharacter.Get()))
 	{
-		Possess(currentChar->PreviousCharacter.Get());
+		if (AController* PreviousController = currentChar->PreviousCharacter.Get()->GetController())
+		{
+			PreviousController->UnPossess();//빙의중인 Controller빙의 해제
+			UnPossess();
+			Possess(currentChar->PreviousCharacter.Get());//이전 캐릭터 빙의
+			currentChar->GetAIController()->Possess(currentChar);//다시 인공지능컨트롤러에 의해 빙의됨
+		}
 	}
 }

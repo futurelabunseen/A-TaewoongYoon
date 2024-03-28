@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -11,7 +11,9 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
+class AHermesAIController;
 struct FInputActionValue;
+
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -44,10 +46,17 @@ class AHermesCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> LookAction;
 
-	
+	UPROPERTY()
+	TObjectPtr<AController> AIController;
+
+
 
 public:
 	AHermesCharacter();
+
+	bool IsLeader() const;
+	const AHermesCharacter& GetLeader() const;
+
 
 	UPROPERTY()
 	TWeakObjectPtr<AHermesCharacter> PreviousCharacter;
@@ -76,5 +85,10 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	FORCEINLINE class AController* GetAIController() const { return AIController; }
+	FORCEINLINE class AController* SetAIController(class AController* HermesAIController)  { return AIController = HermesAIController; }
+
+
 };
 

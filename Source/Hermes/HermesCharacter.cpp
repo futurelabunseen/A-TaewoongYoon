@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "HermesCharacter.h"
 #include "Engine/LocalPlayer.h"
@@ -52,6 +52,21 @@ AHermesCharacter::AHermesCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+	
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+}
+
+bool AHermesCharacter::IsLeader() const
+{
+	return (nullptr != Cast<APlayerController>(GetController()));//AI컨트롤러가 아닌 플레이어 컨트롤러가 조종하는 캐릭터가 리더
+}
+
+const AHermesCharacter& AHermesCharacter::GetLeader() const
+{
+	if (IsLeader())
+		return *this;
+	check(NextCharacter.Get());
+	return NextCharacter->GetLeader();//원형 연결리스트를 순회하며 리더찾기
 }
 
 void AHermesCharacter::BeginPlay()

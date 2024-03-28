@@ -1,31 +1,37 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+ï»¿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "HermesGameMode.h"
 #include "HermesCharacter.h"
+#include "HermesAIController.h"
 #include "HermesPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Engine/World.h"
 
 AHermesGameMode::AHermesGameMode()
+	:
+	InitInterval(0)
 {
 }
 
 void AHermesGameMode::PostLogin(APlayerController* NewPlayer)
 {
+	Super::PostLogin(NewPlayer);
 	AHermesPlayerController* hermesPlayer = CastChecked<AHermesPlayerController>(NewPlayer);
 	if (GetWorld())
 	{
-		FVector SpawnPosition = InitPosition;
+		FVector SpawnPosition = ChoosePlayerStart(NewPlayer)->GetActorLocation();
 		bool possessPlayer = false;
-		AHermesCharacter* firstChar = nullptr;//Ã¹¹øÂ°·Î »ı¼ºµÇ´Â Ä³¸¯ÅÍ¿¡ ´ëÇÑ Æ÷ÀÎÅÍ(¿¹¿ÜÃ³¸®¿ë)
+		AHermesCharacter* firstChar = nullptr;//ì²«ë²ˆì§¸ë¡œ ìƒì„±ë˜ëŠ” ìºë¦­í„°ì— ëŒ€í•œ í¬ì¸í„°(ì˜ˆì™¸ì²˜ë¦¬ìš©)
 		AHermesCharacter* previousChar = nullptr;
 		for (const auto& initChar : InitCharacters)
 		{
 			AHermesCharacter* SpawnedChar = CastChecked<AHermesCharacter>(GetWorld()->SpawnActor(initChar));
+			SpawnedChar->SetAIController(CastChecked<AHermesAIController>(SpawnedChar->GetController()));//ìë™ ëŒ€ì‘ë˜ëŠ” AIControllerë¥¼ ê¸°ë¡
+
 			SpawnedChar->SetActorLocation(SpawnPosition);
 			SpawnPosition.X += InitInterval;
 			if (IsValid(hermesPlayer->GetCharacter()))
-			{//µÎ¹øÂ° ÀÌÈÄ ÇÃ·¹ÀÌ¾î »ı¼º·ÎÁ÷
+			{//ë‘ë²ˆì§¸ ì´í›„ í”Œë ˆì´ì–´ ìƒì„±ë¡œì§
 				previousChar->NextCharacter = SpawnedChar;
 				SpawnedChar->PreviousCharacter = previousChar;
 				SpawnedChar->NextCharacter = firstChar;
@@ -33,7 +39,9 @@ void AHermesGameMode::PostLogin(APlayerController* NewPlayer)
 				previousChar = SpawnedChar;
 			}
 			if (!possessPlayer)
-			{//Ã¹¹øÂ° ÇÃ·¹ÀÌ¾î »ı¼º ·ÎÁ÷
+			{//ì²«ë²ˆì§¸ í”Œë ˆì´ì–´ ìƒì„± ë¡œì§
+				check(SpawnedChar->GetController());
+				SpawnedChar->GetController()->UnPossess();//ê¸°ë³¸ë¹™ì˜ì¤‘ì¸ AIController ë¹™ì˜í•´ì œ
 				hermesPlayer->Possess(SpawnedChar);
 				firstChar = SpawnedChar;
 				previousChar = firstChar;

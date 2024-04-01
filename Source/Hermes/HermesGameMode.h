@@ -1,4 +1,4 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -6,7 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "HermesGameMode.generated.h"
 
-UCLASS(minimalapi)
+UCLASS(minimalapi,Abstract)
 class AHermesGameMode : public AGameModeBase
 {
 	GENERATED_BODY()

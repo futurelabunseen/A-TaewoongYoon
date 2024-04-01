@@ -1,4 +1,4 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -17,7 +17,9 @@ public class Hermes : ModuleRules
 				"EnhancedInput" ,
 				"NavigationSystem", 
 				"AIModule",
-				"GameplayTasks"
+                "GameplayAbilities",
+				"GameplayTags",
+                "GameplayTasks"
 			}
 		);
 	}

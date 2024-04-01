@@ -29,6 +29,8 @@ public:
 	const AHermesCharacter& GetLeader() const;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	UFUNCTION(BlueprintCallable)
+	const class UGA_Activatable* GetActivatableAbility(int32 index) const;
 
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }

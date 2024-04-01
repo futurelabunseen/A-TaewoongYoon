@@ -15,8 +15,12 @@ public:
 	AHermesGameMode();
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
-
+	virtual void BeginPlay() override;
 private:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UUserWidget> MainHUDClass;
+
+
 	UPROPERTY(EditAnywhere)
 	TArray<TSubclassOf<class AHermesCharacter>> InitCharacters;
 

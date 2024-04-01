@@ -77,6 +77,22 @@ UAbilitySystemComponent* AHermesCharacter::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
+const UGA_Activatable* AHermesCharacter::GetActivatableAbility(int32 index) const
+{
+	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
+	AbilitySystemComponent->GetAllAbilities(AbilitySpecHandles);
+	for ( const auto& AbilitySpecHandle : AbilitySpecHandles )
+	{
+		FGameplayAbilitySpec* AbilitySpec = AbilitySystemComponent->FindAbilitySpecFromHandle(AbilitySpecHandle);
+		if ( AbilitySpec->InputID == index )
+		{
+			return CastChecked<UGA_Activatable>(AbilitySpec->Ability);
+		}
+	}
+	check(nullptr);
+	return nullptr;
+}
+
 void AHermesCharacter::BeginPlay()
 {
 	Super::BeginPlay();

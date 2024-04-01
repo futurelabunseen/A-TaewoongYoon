@@ -43,4 +43,11 @@ public:
 		bool bReplicateEndAbility,
 		bool bWasCancelled
 	) override;
+
+	UFUNCTION(BlueprintCallable)
+	const UMaterial* GetSkillIcon() const;
+
+private:
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UMaterial> SkillIcon;
 };

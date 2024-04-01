@@ -19,7 +19,8 @@ public class Hermes : ModuleRules
 				"AIModule",
                 "GameplayAbilities",
 				"GameplayTags",
-                "GameplayTasks"
+                "GameplayTasks",
+				"UMG"
 			}
 		);
 	}

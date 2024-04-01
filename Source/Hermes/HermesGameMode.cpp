@@ -1,10 +1,11 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "HermesGameMode.h"
 #include "HermesCharacter.h"
 #include "HermesAIController.h"
 #include "HermesPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Blueprint/UserWidget.h"
 #include "Engine/World.h"
 
 AHermesGameMode::AHermesGameMode()
@@ -52,4 +53,17 @@ void AHermesGameMode::PostLogin(APlayerController* NewPlayer)
 		}
 		
 	}
+}
+
+void AHermesGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	if (MainHUDClass != nullptr)
+    {
+        UUserWidget* MyWidget = CreateWidget<UUserWidget>(GetWorld(), MainHUDClass);
+        if (MyWidget != nullptr)
+        {
+            MyWidget->AddToViewport();
+        }
+    }
 }

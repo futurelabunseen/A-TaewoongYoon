@@ -35,6 +35,7 @@ void UGA_Activatable::ActivateAbility(
 )
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	
 }
 
 void UGA_Activatable::EndAbility(
@@ -52,3 +53,4 @@ const UMaterial* UGA_Activatable::GetSkillIcon() const
 {
 	return SkillIcon;
 }
+

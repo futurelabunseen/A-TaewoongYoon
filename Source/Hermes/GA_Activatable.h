@@ -47,6 +47,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	const UMaterial* GetSkillIcon() const;
 
+	UFUNCTION(BlueprintCallable)
+	TSubclassOf<UGameplayEffect> GetCoolDownGameplayEffectClass() const { return CooldownGameplayEffectClass; }
+
+
+
 private:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UMaterial> SkillIcon;

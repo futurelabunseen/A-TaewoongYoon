@@ -36,6 +36,7 @@ public:
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData
 	) override;
+
 	virtual void EndAbility(
 		const FGameplayAbilitySpecHandle Handle,
 		const FGameplayAbilityActorInfo* ActorInfo,

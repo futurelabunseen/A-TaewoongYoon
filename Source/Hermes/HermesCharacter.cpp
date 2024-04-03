@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "AbilitySystemComponent.h"
 #include "GA_Activatable.h"
+#include "GA_Pathfinding.h"
 #include "InputActionValue.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -110,6 +111,31 @@ void AHermesCharacter::BeginPlay()
 		FGameplayAbilitySpec StartSpec(StartAbility);
 		StartSpec.InputID = InputId++;
 		AbilitySystemComponent->GiveAbility(StartSpec);
+	}
+	if (StartPathfindingAbility)
+	{//GA_Pathfinding능력이 초기 설정되어있다면 부여
+		FGameplayAbilitySpec PathfindingAbilitySpec(StartPathfindingAbility);
+		AbilitySystemComponent->GiveAbility(PathfindingAbilitySpec);
+		if(IsLeader())
+			AbilitySystemComponent->TryActivateAbility(PathfindingAbilitySpec.Handle);//리더 캐릭터는 Pathfinding 부여후 바로 발동
+	}
+	
+
+}
+
+void AHermesCharacter::PossessedBy(AController* NewController)
+{//캐릭터를 조작하는 Controller가 변경되었을때 리더캐릭터는 Pathfinding을 켜고 동료캐릭터는 Pathfinding을 끄는 로직
+	Super::PossessedBy(NewController);
+	FGameplayAbilitySpec* PathfindingAbilitySpec = AbilitySystemComponent->FindAbilitySpecFromClass(StartPathfindingAbility);
+	if ( !PathfindingAbilitySpec )
+		return;
+	if (PathfindingAbilitySpec->IsActive())
+	{
+		AbilitySystemComponent->CancelAbility(PathfindingAbilitySpec->Ability);
+	}
+	else
+	{
+		AbilitySystemComponent->TryActivateAbility(PathfindingAbilitySpec->Handle);
 	}
 }
 

@@ -47,7 +47,7 @@ protected:
 	void Look(const FInputActionValue& Value);
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void BeginPlay();
-
+	virtual void PossessedBy(AController* NewController) override;
 private:
 	void GASInputPressed(int32 InputId);
 	void GASInputReleased(int32 InputId);
@@ -91,5 +91,8 @@ private:
 
 	UPROPERTY(EditAnywhere,Category=GAS)
 	TArray<TSubclassOf<class UGA_Activatable>> StartActivatableAbilities;
+
+	UPROPERTY(EditAnywhere,Category=GAS)
+	TSubclassOf<class UGA_Pathfinding> StartPathfindingAbility;
 };
 

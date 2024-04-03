@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "HermesCharacter.h"
+#include "HermesPlayerCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -17,9 +17,9 @@
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
-// AHermesCharacter
+// AHermesPlayerCharacter
 
-AHermesCharacter::AHermesCharacter()
+AHermesPlayerCharacter::AHermesPlayerCharacter()
 {
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("Ability System Component"));
 	// Set size for collision capsule
@@ -60,12 +60,12 @@ AHermesCharacter::AHermesCharacter()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
-bool AHermesCharacter::IsLeader() const
+bool AHermesPlayerCharacter::IsLeader() const
 {
 	return (nullptr != Cast<APlayerController>(GetController()));//AI컨트롤러가 아닌 플레이어 컨트롤러가 조종하는 캐릭터가 리더
 }
 
-const AHermesCharacter& AHermesCharacter::GetLeader() const
+const AHermesPlayerCharacter& AHermesPlayerCharacter::GetLeader() const
 {
 	if (IsLeader())
 		return *this;
@@ -73,12 +73,12 @@ const AHermesCharacter& AHermesCharacter::GetLeader() const
 	return NextCharacter->GetLeader();//원형 연결리스트를 순회하며 리더찾기
 }
 
-UAbilitySystemComponent* AHermesCharacter::GetAbilitySystemComponent() const
+UAbilitySystemComponent* AHermesPlayerCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
 }
 
-const UGA_Activatable* AHermesCharacter::GetActivatableAbility(int32 index) const
+const UGA_Activatable* AHermesPlayerCharacter::GetActivatableAbility(int32 index) const
 {
 	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
 	AbilitySystemComponent->GetAllAbilities(AbilitySpecHandles);
@@ -94,7 +94,7 @@ const UGA_Activatable* AHermesCharacter::GetActivatableAbility(int32 index) cons
 	return nullptr;
 }
 
-void AHermesCharacter::BeginPlay()
+void AHermesPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -123,7 +123,7 @@ void AHermesCharacter::BeginPlay()
 
 }
 
-void AHermesCharacter::PossessedBy(AController* NewController)
+void AHermesPlayerCharacter::PossessedBy(AController* NewController)
 {//캐릭터를 조작하는 Controller가 변경되었을때 리더캐릭터는 Pathfinding을 켜고 동료캐릭터는 Pathfinding을 끄는 로직
 	Super::PossessedBy(NewController);
 	FGameplayAbilitySpec* PathfindingAbilitySpec = AbilitySystemComponent->FindAbilitySpecFromClass(StartPathfindingAbility);
@@ -140,7 +140,7 @@ void AHermesCharacter::PossessedBy(AController* NewController)
 }
 
 
-void AHermesCharacter::GASInputPressed(int32 InputId)
+void AHermesPlayerCharacter::GASInputPressed(int32 InputId)
 {
 	FGameplayAbilitySpec* Spec = AbilitySystemComponent->FindAbilitySpecFromInputID(InputId);
 	if (Spec)
@@ -157,7 +157,7 @@ void AHermesCharacter::GASInputPressed(int32 InputId)
 	}
 }
 
-void AHermesCharacter::GASInputReleased(int32 InputId)
+void AHermesPlayerCharacter::GASInputReleased(int32 InputId)
 {
 	FGameplayAbilitySpec* Spec = AbilitySystemComponent->FindAbilitySpecFromInputID(InputId);
 	if (Spec)
@@ -173,24 +173,24 @@ void AHermesCharacter::GASInputReleased(int32 InputId)
 //////////////////////////////////////////////////////////////////////////
 // Input
 
-void AHermesCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AHermesPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) 
 	{
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHermesCharacter::Move);
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHermesCharacter::Look);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::Look);
 		if ( IsValid(AbilitySystemComponent) )
 		{//GAS인풋 설정
-			EnhancedInputComponent->BindAction(Skill1Action, ETriggerEvent::Triggered, this, &AHermesCharacter::GASInputPressed,1);
-			EnhancedInputComponent->BindAction(Skill1Action, ETriggerEvent::Completed, this, &AHermesCharacter::GASInputReleased,1);
-			EnhancedInputComponent->BindAction(Skill2Action, ETriggerEvent::Triggered, this, &AHermesCharacter::GASInputPressed,2);
-			EnhancedInputComponent->BindAction(Skill2Action, ETriggerEvent::Completed, this, &AHermesCharacter::GASInputReleased,2);
-			EnhancedInputComponent->BindAction(Skill3Action, ETriggerEvent::Triggered, this, &AHermesCharacter::GASInputPressed,3);
-			EnhancedInputComponent->BindAction(Skill3Action, ETriggerEvent::Completed, this, &AHermesCharacter::GASInputReleased,3);
-			EnhancedInputComponent->BindAction(Skill4Action, ETriggerEvent::Triggered, this, &AHermesCharacter::GASInputPressed,4);
-			EnhancedInputComponent->BindAction(Skill4Action, ETriggerEvent::Completed, this, &AHermesCharacter::GASInputReleased,4);
+			EnhancedInputComponent->BindAction(Skill1Action, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::GASInputPressed,1);
+			EnhancedInputComponent->BindAction(Skill1Action, ETriggerEvent::Completed, this, &AHermesPlayerCharacter::GASInputReleased,1);
+			EnhancedInputComponent->BindAction(Skill2Action, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::GASInputPressed,2);
+			EnhancedInputComponent->BindAction(Skill2Action, ETriggerEvent::Completed, this, &AHermesPlayerCharacter::GASInputReleased,2);
+			EnhancedInputComponent->BindAction(Skill3Action, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::GASInputPressed,3);
+			EnhancedInputComponent->BindAction(Skill3Action, ETriggerEvent::Completed, this, &AHermesPlayerCharacter::GASInputReleased,3);
+			EnhancedInputComponent->BindAction(Skill4Action, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::GASInputPressed,4);
+			EnhancedInputComponent->BindAction(Skill4Action, ETriggerEvent::Completed, this, &AHermesPlayerCharacter::GASInputReleased,4);
 		}
 	}
 	else
@@ -199,7 +199,7 @@ void AHermesCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	}
 }
 
-void AHermesCharacter::Move(const FInputActionValue& Value)
+void AHermesPlayerCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -222,7 +222,7 @@ void AHermesCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
-void AHermesCharacter::Look(const FInputActionValue& Value)
+void AHermesPlayerCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();

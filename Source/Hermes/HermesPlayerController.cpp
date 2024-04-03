@@ -1,9 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "HermesPlayerController.h"
 #include "EnhancedInputComponent.h"
-#include "HermesCharacter.h"
+#include "HermesPlayerCharacter.h"
 
 AHermesPlayerController::AHermesPlayerController()
 {}
@@ -23,7 +23,7 @@ void AHermesPlayerController::SetupInputComponent()
 
 void AHermesPlayerController::ChangeToNextChar()
 {
-	AHermesCharacter* currentChar = CastChecked<AHermesCharacter>(GetCharacter());
+	AHermesPlayerCharacter* currentChar = CastChecked<AHermesPlayerCharacter>(GetCharacter());
 	if (IsValid(currentChar->NextCharacter.Get()))
 	{
 		if(AController* NextController = currentChar->NextCharacter.Get()->GetController())
@@ -38,7 +38,7 @@ void AHermesPlayerController::ChangeToNextChar()
 
 void AHermesPlayerController::ChangeToPreviousChar()
 {
-	AHermesCharacter* currentChar = CastChecked<AHermesCharacter>(GetCharacter());
+	AHermesPlayerCharacter* currentChar = CastChecked<AHermesPlayerCharacter>(GetCharacter());
 	if (IsValid(currentChar->PreviousCharacter.Get()))
 	{
 		if (AController* PreviousController = currentChar->PreviousCharacter.Get()->GetController())

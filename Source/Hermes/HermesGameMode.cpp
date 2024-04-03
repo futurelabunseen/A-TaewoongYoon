@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "HermesGameMode.h"
-#include "HermesCharacter.h"
+#include "HermesPlayerCharacter.h"
 #include "HermesAIController.h"
 #include "HermesPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
@@ -22,11 +22,11 @@ void AHermesGameMode::PostLogin(APlayerController* NewPlayer)
 	{
 		FVector SpawnPosition = ChoosePlayerStart(NewPlayer)->GetActorLocation();
 		bool possessPlayer = false;
-		AHermesCharacter* firstChar = nullptr;//첫번째로 생성되는 캐릭터에 대한 포인터(예외처리용)
-		AHermesCharacter* previousChar = nullptr;
+		AHermesPlayerCharacter* firstChar = nullptr;//첫번째로 생성되는 캐릭터에 대한 포인터(예외처리용)
+		AHermesPlayerCharacter* previousChar = nullptr;
 		for (const auto& initChar : InitCharacters)
 		{
-			AHermesCharacter* SpawnedChar = CastChecked<AHermesCharacter>(GetWorld()->SpawnActor(initChar));
+			AHermesPlayerCharacter* SpawnedChar = CastChecked<AHermesPlayerCharacter>(GetWorld()->SpawnActor(initChar));
 			SpawnedChar->SetAIController(CastChecked<AHermesAIController>(SpawnedChar->GetController()));//자동 대응되는 AIController를 기록
 
 			SpawnedChar->SetActorLocation(SpawnPosition);

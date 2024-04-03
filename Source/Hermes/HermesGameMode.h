@@ -22,7 +22,7 @@ private:
 
 
 	UPROPERTY(EditAnywhere)
-	TArray<TSubclassOf<class AHermesCharacter>> InitCharacters;
+	TArray<TSubclassOf<class AHermesPlayerCharacter>> InitCharacters;
 
 	UPROPERTY(EditAnywhere)
 	int32 InitInterval;

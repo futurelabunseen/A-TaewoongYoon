@@ -6,7 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "AbilitySystemInterface.h"
-#include "HermesCharacter.generated.h"
+#include "HermesPlayerCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
@@ -19,14 +19,14 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game,Abstract)
-class AHermesCharacter : public ACharacter, public IAbilitySystemInterface
+class AHermesPlayerCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 public:
-	AHermesCharacter();
+	AHermesPlayerCharacter();
 
 	bool IsLeader() const;
-	const AHermesCharacter& GetLeader() const;
+	const AHermesPlayerCharacter& GetLeader() const;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable)
@@ -38,10 +38,10 @@ public:
 	FORCEINLINE class AController* SetAIController(class AController* HermesAIController)  { return AIController = HermesAIController; }
 public:
 	UPROPERTY()
-	TWeakObjectPtr<AHermesCharacter> PreviousCharacter;
+	TWeakObjectPtr<AHermesPlayerCharacter> PreviousCharacter;
 
 	UPROPERTY()
-	TWeakObjectPtr<AHermesCharacter> NextCharacter;
+	TWeakObjectPtr<AHermesPlayerCharacter> NextCharacter;
 protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);

@@ -91,6 +91,21 @@ UAbilitySystemComponent* AHermesPlayerCharacter::GetAbilitySystemComponent() con
 	return AbilitySystemComponent;
 }
 
+TArray<AHermesPlayerCharacter*> AHermesPlayerCharacter::GetTeamCharacters() const
+{
+	TArray<AHermesPlayerCharacter*> TeamChars;
+	AHermesPlayerCharacter* FirstChar = const_cast<AHermesPlayerCharacter*>( this );
+	
+	TeamChars.Add(FirstChar);
+	AHermesPlayerCharacter* NextChar = FirstChar->NextCharacter.Get();
+	while ( NextChar && NextChar != FirstChar )
+	{
+		TeamChars.Add(NextChar);
+		NextChar = NextChar->NextCharacter.Get();
+	}
+	return TeamChars;
+}
+
 const UGA_Activatable* AHermesPlayerCharacter::GetActivatableAbility(int32 index) const
 {
 	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
@@ -137,6 +152,8 @@ void AHermesPlayerCharacter::BeginPlay()
 		FGameplayAbilitySpec AutoAttackAbilitySpec(StartAutoAttackAbility);
 		AbilitySystemComponent->GiveAbility(AutoAttackAbilitySpec);
 	}
+
+
 	FTimerHandle TimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AHermesPlayerCharacter::AutoAttack, 1.0f, true);
 }

@@ -4,6 +4,9 @@
 #include "TargetLockComponent.h"
 #include "GameFramework\Character.h"
 #include "Components/CapsuleComponent.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
+
 
 UTargetLockComponent::UTargetLockComponent()
 {
@@ -139,17 +142,17 @@ void UTargetLockComponent::TickComponent(float DeltaTime , ELevelTick TickType ,
 
     if ( GetNumOpponentCharacter() == 0 )
     {
-        DrawDebugSphere(
-            GetWorld(),
-            SphereLocation,
-            SphereRadius,
-            10, // 세그먼트 수, 더 많이 설정할수록 스피어가 더 부드러워집니다.
-            FColor::Green, // 색상
-            false, // 지속적으로 그릴 것인지 여부
-            -1.0f, // 지속 시간
-            0, // 깊이
-            0.3f // 라인 두께
-        );
+        //DrawDebugSphere(
+        //    GetWorld(),
+        //    SphereLocation,
+        //    SphereRadius,
+        //    10, // 세그먼트 수, 더 많이 설정할수록 스피어가 더 부드러워집니다.
+        //    FColor::Green, // 색상
+        //    false, // 지속적으로 그릴 것인지 여부
+        //    -1.0f, // 지속 시간
+        //    0, // 깊이
+        //    0.3f // 라인 두께
+        //);
     }
     else
     {
@@ -196,6 +199,11 @@ void UTargetLockComponent::HandleOverlapBegin(
             if ( OpponentActor->GetClass()->IsChildOf(OpponentCharacterClass) )
             {
                 TargetActor = OpponentActor;
+                if ( GetAttachParentActor()->GetClass()->ImplementsInterface(UAbilitySystemInterface::StaticClass()) )
+                {//GAS액터라면 Targetting태그 부착
+                    IAbilitySystemInterface* ASC = Cast<IAbilitySystemInterface>(GetAttachParentActor());
+                    ASC->GetAbilitySystemComponent()->AddLooseGameplayTag(OnTargettingTag);
+                }
             }
         }
     }
@@ -213,6 +221,11 @@ void UTargetLockComponent::HandleOverlapEnd(
         if ( OtherCapsule->GetAttachmentRootActor() == TargetActor )
         {
             TargetActor = nullptr;
+            if ( GetAttachParentActor()->GetClass()->ImplementsInterface(UAbilitySystemInterface::StaticClass()) )
+            {//GAS액터라면 Targetting태그 해제
+                IAbilitySystemInterface* ASC = Cast<IAbilitySystemInterface>(GetAttachParentActor());
+                ASC->GetAbilitySystemComponent()->RemoveLooseGameplayTag(OnTargettingTag);
+            }
         }
     }
 }

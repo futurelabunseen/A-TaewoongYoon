@@ -5,7 +5,7 @@
 
 UHermesAttributeSet::UHermesAttributeSet()
 	:
-	HP(100.0f),
+	HP(150.0f),
 	MaxHP(200.0f)
 {
 }

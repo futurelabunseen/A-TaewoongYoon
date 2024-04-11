@@ -23,6 +23,8 @@ public:
 		const FGameplayEventData* TriggerEventData
 	) override;
 
+	UFUNCTION(BlueprintCallable)
+	bool CanActivateGA_Activatable(class UAbilitySystemComponent* ASC) const;
 
 	UFUNCTION(BlueprintCallable)
 	const UMaterial* GetSkillIcon() const;

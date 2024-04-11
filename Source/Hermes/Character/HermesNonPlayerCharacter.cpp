@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "TargetLockComponent.h"
 #include "Components/WidgetComponent.h"
+#include "GA\GA_AutoAttack.h"
 
 // Sets default values
 AHermesNonPlayerCharacter::AHermesNonPlayerCharacter()
@@ -52,7 +53,13 @@ UAbilitySystemComponent* AHermesNonPlayerCharacter::GetAbilitySystemComponent() 
 void AHermesNonPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	if ( StartAutoAttackAbility )
+	{//GA_AutoAttack능력이 초기 설정되어있다면 부여
+		FGameplayAbilitySpec AutoAttackAbilitySpec(StartAutoAttackAbility);
+		AbilitySystemComponent->GiveAbility(AutoAttackAbilitySpec);
+	}
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AHermesNonPlayerCharacter::AutoAttack, 1.0f, true);
 }
 
 // Called every frame
@@ -60,6 +67,15 @@ void AHermesNonPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AHermesNonPlayerCharacter::AutoAttack()
+{
+	const AActor* TargetActor = TargetLockComponent->GetTargetActor();
+	if ( TargetActor )
+	{
+		AbilitySystemComponent->TryActivateAbilityByClass(StartAutoAttackAbility);
+	}
 }
 
 

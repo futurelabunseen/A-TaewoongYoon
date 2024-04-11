@@ -2,6 +2,7 @@
 
 
 #include "GA_Activatable.h"
+#include "AbilitySystemComponent.h"
 
 UGA_Activatable::UGA_Activatable()
 {
@@ -16,8 +17,21 @@ void UGA_Activatable::ActivateAbility(
 )
 {
 	CommitAbility(Handle , ActorInfo , ActivationInfo);
+	
 	Super::ActivateAbility(Handle , ActorInfo , ActivationInfo , TriggerEventData);
 }
+
+bool UGA_Activatable::CanActivateGA_Activatable(UAbilitySystemComponent* ASC) const
+{
+	FGameplayAbilitySpec* AbilitySpec =  ASC->FindAbilitySpecFromClass(this->GetClass());
+	check(AbilitySpec);
+	FGameplayAbilityActorInfo* ActorInfo = ASC->AbilityActorInfo.Get();
+	check(ActorInfo);
+	
+	return CanActivateAbility(AbilitySpec->Handle , ActorInfo);
+}
+
+
 
 
 const UMaterial* UGA_Activatable::GetSkillIcon() const

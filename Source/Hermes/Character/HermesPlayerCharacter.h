@@ -6,7 +6,9 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayTagContainer.h"
 #include "HermesPlayerCharacter.generated.h"
+
 
 class USpringArmComponent;
 class UCameraComponent;
@@ -28,6 +30,9 @@ public:
 	bool IsLeader() const;
 	const AHermesPlayerCharacter& GetLeader() const;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UFUNCTION(BlueprintCallable)
+	TArray<AHermesPlayerCharacter*> GetTeamCharacters() const;
 
 	UFUNCTION(BlueprintCallable)
 	const class UGA_Activatable* GetActivatableAbility(int32 index) const;
@@ -106,6 +111,8 @@ private:
 
 	UPROPERTY(EditAnywhere,Category=GAS)
 	TSubclassOf<class UGA_AutoAttack> StartAutoAttackAbility;
+
+
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UTargetLockComponent> TargetLockComponent;

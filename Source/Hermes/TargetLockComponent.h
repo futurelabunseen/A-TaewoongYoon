@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
+#include "GameplayTagContainer.h"
 #include "TargetLockComponent.generated.h"
 
 
@@ -61,6 +62,10 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<AActor> TargetActor;
+
+	UPROPERTY(EditAnywhere)
+    FGameplayTag OnTargettingTag;
+
 
 	bool bIsInputPressed;
 };

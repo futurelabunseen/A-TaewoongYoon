@@ -24,6 +24,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
+	void AutoAttack();
+private:
 	UPROPERTY()
  	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
@@ -35,4 +37,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UWidgetComponent> HPBar;
+
+	UPROPERTY(EditAnywhere,Category=GAS)
+	TSubclassOf<class UGA_AutoAttack> StartAutoAttackAbility;
 };

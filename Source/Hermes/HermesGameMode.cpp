@@ -1,9 +1,9 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "HermesGameMode.h"
-#include "HermesPlayerCharacter.h"
-#include "HermesAIController.h"
-#include "HermesPlayerController.h"
+#include "Character\HermesPlayerCharacter.h"
+#include "Controller\HermesAIController.h"
+#include "Controller\HermesPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/World.h"

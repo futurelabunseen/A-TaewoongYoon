@@ -110,3 +110,8 @@ void UGA_Pathfinding::UpdatePath()
 		
 	}
 }
+
+void UGA_Pathfinding::SetGoal(FVector Goal)
+{
+	GoalLocation = Goal;
+}

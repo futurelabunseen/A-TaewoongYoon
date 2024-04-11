@@ -2,7 +2,6 @@
 
 
 #include "HermesAIController.h"
-#include "HermesPlayerCharacter.h"
 #include "BehaviorTree\BehaviorTree.h"
 #include "BehaviorTree\BlackboardData.h"
 #include "BehaviorTree\BlackboardComponent.h"
@@ -52,9 +51,4 @@ void AHermesAIController::OnUnPossess()
 void AHermesAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	AHermesPlayerCharacter* currentChar = Cast<AHermesPlayerCharacter>(GetCharacter());
-	if (currentChar)
-	{
-		Blackboard->SetValueAsVector(BBKEY_LEADERPOSITION, currentChar->GetLeader().GetActorLocation());
-	}
 }

@@ -3,7 +3,7 @@
 
 #include "HermesPlayerController.h"
 #include "EnhancedInputComponent.h"
-#include "HermesPlayerCharacter.h"
+#include "Character\HermesPlayerCharacter.h"
 
 AHermesPlayerController::AHermesPlayerController()
 {}

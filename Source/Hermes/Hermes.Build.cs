@@ -23,5 +23,6 @@ public class Hermes : ModuleRules
 				"UMG"
 			}
 		);
-	}
+        PrivateIncludePaths.Add("Hermes");
+    }
 }

@@ -34,6 +34,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UpdatePath();
 
+	UFUNCTION(BlueprintCallable)
+	void SetGoal(FVector Goal);
+
 private:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UStaticMesh> SplineStaticMesh;

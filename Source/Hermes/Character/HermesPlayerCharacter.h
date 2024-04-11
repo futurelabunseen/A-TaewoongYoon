@@ -51,6 +51,7 @@ protected:
 private:
 	void GASInputPressed(int32 InputId);
 	void GASInputReleased(int32 InputId);
+	void AutoAttack();
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> CameraBoom;
@@ -82,6 +83,11 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> Skill4Action;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> ChangeTargetCWAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> ChangeTargetCCWAction;
 
 	UPROPERTY()
 	TObjectPtr<AController> AIController;
@@ -89,10 +95,22 @@ private:
 	UPROPERTY()
  	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
+	UPROPERTY()
+	TObjectPtr<class UHermesAttributeSet> AttributeSet;
+
 	UPROPERTY(EditAnywhere,Category=GAS)
 	TArray<TSubclassOf<class UGA_Activatable>> StartActivatableAbilities;
 
 	UPROPERTY(EditAnywhere,Category=GAS)
 	TSubclassOf<class UGA_Pathfinding> StartPathfindingAbility;
+
+	UPROPERTY(EditAnywhere,Category=GAS)
+	TSubclassOf<class UGA_AutoAttack> StartAutoAttackAbility;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UTargetLockComponent> TargetLockComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UWidgetComponent> HPBar;
 };
 

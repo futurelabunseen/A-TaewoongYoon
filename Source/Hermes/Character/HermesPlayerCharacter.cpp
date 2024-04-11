@@ -10,9 +10,14 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "AbilitySystemComponent.h"
-#include "GA_Activatable.h"
-#include "GA_Pathfinding.h"
+#include "GA\GA_Activatable.h"
+#include "GA\GA_Pathfinding.h"
+#include "GA\GA_AutoAttack.h"
+#include "Attribute\HermesAttributeSet.h"
 #include "InputActionValue.h"
+#include "Blueprint/UserWidget.h"
+#include "TargetLockComponent.h"
+#include "Components/WidgetComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -21,10 +26,18 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 AHermesPlayerCharacter::AHermesPlayerCharacter()
 {
-	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("Ability System Component"));
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("Ability System Component"));
+	AttributeSet = CreateDefaultSubobject<UHermesAttributeSet>(TEXT("Attribute Set"));
+	TargetLockComponent = CreateDefaultSubobject<UTargetLockComponent>(TEXT("TargetLock Component"));
+	TargetLockComponent->SetupAttachment(RootComponent);
+	
 		
+	HPBar = CreateDefaultSubobject<UWidgetComponent>(TEXT("HP Bar"));
+	HPBar->SetupAttachment(RootComponent);
+	
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -119,9 +132,18 @@ void AHermesPlayerCharacter::BeginPlay()
 		if(IsLeader())
 			AbilitySystemComponent->TryActivateAbility(PathfindingAbilitySpec.Handle);//리더 캐릭터는 Pathfinding 부여후 바로 발동
 	}
-	
-
+	if ( StartAutoAttackAbility )
+	{//GA_AutoAttack능력이 초기 설정되어있다면 부여
+		FGameplayAbilitySpec AutoAttackAbilitySpec(StartAutoAttackAbility);
+		AbilitySystemComponent->GiveAbility(AutoAttackAbilitySpec);
+	}
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AHermesPlayerCharacter::AutoAttack, 1.0f, true);
 }
+
+
+
+
 
 void AHermesPlayerCharacter::PossessedBy(AController* NewController)
 {//캐릭터를 조작하는 Controller가 변경되었을때 리더캐릭터는 Pathfinding을 켜고 동료캐릭터는 Pathfinding을 끄는 로직
@@ -170,6 +192,15 @@ void AHermesPlayerCharacter::GASInputReleased(int32 InputId)
 	}
 }
 
+void AHermesPlayerCharacter::AutoAttack()
+{
+	const AActor* TargetActor = TargetLockComponent->GetTargetActor();
+	if ( TargetActor )
+	{
+		AbilitySystemComponent->TryActivateAbilityByClass(StartAutoAttackAbility);
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -181,6 +212,10 @@ void AHermesPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::Look);
+		EnhancedInputComponent->BindAction(ChangeTargetCWAction, ETriggerEvent::Triggered, TargetLockComponent, FName(TEXT("ChangeTargetActorClockwise")));
+		EnhancedInputComponent->BindAction(ChangeTargetCWAction, ETriggerEvent::Completed, TargetLockComponent, FName(TEXT("InputReleased")));
+		EnhancedInputComponent->BindAction(ChangeTargetCCWAction, ETriggerEvent::Triggered, TargetLockComponent, FName(TEXT("ChangeTargetActorCounterClockwise")));
+		EnhancedInputComponent->BindAction(ChangeTargetCCWAction, ETriggerEvent::Completed, TargetLockComponent, FName(TEXT("InputReleased")));
 		if ( IsValid(AbilitySystemComponent) )
 		{//GAS인풋 설정
 			EnhancedInputComponent->BindAction(Skill1Action, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::GASInputPressed,1);

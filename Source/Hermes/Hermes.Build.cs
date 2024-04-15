@@ -20,9 +20,13 @@ public class Hermes : ModuleRules
                 "GameplayAbilities",
 				"GameplayTags",
                 "GameplayTasks",
-				"UMG"
+				"UMG",
+				"CPathfinding"
 			}
 		);
+
+        PublicIncludePaths.AddRange(new string[] { "CPathfinding/Public"});
+
         PrivateIncludePaths.Add("Hermes");
     }
 }

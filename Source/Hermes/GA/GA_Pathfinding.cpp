@@ -6,11 +6,12 @@
 #include "Runtime/NavigationSystem/Public/NavigationPath.h"
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
+#include "CPathFindPath.h"
 
 UGA_Pathfinding::UGA_Pathfinding()
 	:
 	GoalLocation(FVector::ZeroVector),
-	MaxNumOfSplinePoints(15),
+	MaxNumOfSplinePoints(60),
 	SplineTickness(0.1f),
 	RouteZHeight(40.f)
 {
@@ -40,7 +41,6 @@ void UGA_Pathfinding::CancelAbility(const FGameplayAbilitySpecHandle Handle , co
 
 void UGA_Pathfinding::ActivateAbility(const FGameplayAbilitySpecHandle Handle , const FGameplayAbilityActorInfo* ActorInfo , const FGameplayAbilityActivationInfo ActivationInfo , const FGameplayEventData* TriggerEventData)
 {//Spline Component를 Avatar Actor에 부착
-	
 	AActor* AvatarActor = GetAvatarActorFromActorInfo();
 	USplineComponent* SplineComponent = NewObject<USplineComponent>(AvatarActor , USplineComponent::StaticClass());
 	check(SplineComponent);
@@ -63,7 +63,7 @@ void UGA_Pathfinding::ActivateAbility(const FGameplayAbilitySpecHandle Handle , 
 	
 }
 
-void UGA_Pathfinding::UpdatePath()
+const TArray<FVector>& UGA_Pathfinding::FindNavMeshPathSync()
 {
 	const UNavigationSystemV1* navSys = UNavigationSystemV1::GetCurrent(GetWorld());
 	const UNavigationPath* path = navSys->FindPathToLocationSynchronously(
@@ -71,13 +71,18 @@ void UGA_Pathfinding::UpdatePath()
 		GetAvatarActorFromActorInfo()->GetActorLocation(),
 		GoalLocation
 	);
+	return path->PathPoints;
+}
+
+void UGA_Pathfinding::UpdatePath(const TArray<FVector>& PathPoints)
+{
 	USplineComponent* SplineComponent = GetAvatarActorFromActorInfo()->GetComponentByClass<USplineComponent>();
 	{//Spline 초기화 후 path정보에 따라 새로 업데이트
 		check(SplineComponent);
 		SplineComponent->ClearSplinePoints();
-		for(uint8 i = 0;i<path->PathPoints.Num();i++)
+		for(uint8 i = 0;i<PathPoints.Num();i++)
 		{
-			SplineComponent->AddSplinePoint(path->PathPoints[i] + FVector(0.0,0.0,RouteZHeight),ESplineCoordinateSpace::World);
+			SplineComponent->AddSplinePoint(PathPoints[i] + FVector(0.0,0.0,RouteZHeight),ESplineCoordinateSpace::World);
 		}
 	}
 	{//업데이트된 Spline정보로 Spline Mesh구성
@@ -114,4 +119,15 @@ void UGA_Pathfinding::UpdatePath()
 void UGA_Pathfinding::SetGoal(FVector Goal)
 {
 	GoalLocation = Goal;
+}
+
+TArray<FVector> UGA_Pathfinding::ConvertCPathNode(const TArray<FCPathNode>& CPathNodes)
+{
+	TArray<FVector> Result;
+	Result.Reserve(CPathNodes.Num());
+	for ( const auto CPathNode : CPathNodes )
+	{
+		Result.Emplace(CPathNode.WorldLocation);
+	}
+	return Result;
 }

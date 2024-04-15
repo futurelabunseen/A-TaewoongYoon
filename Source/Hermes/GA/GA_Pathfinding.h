@@ -32,10 +32,19 @@ public:
 	) override;
 
 	UFUNCTION(BlueprintCallable)
-	void UpdatePath();
+	const TArray<FVector>& FindNavMeshPathSync();
+
+	UFUNCTION(BlueprintCallable)
+	void UpdatePath(const TArray<FVector>& PathPoints);
 
 	UFUNCTION(BlueprintCallable)
 	void SetGoal(FVector Goal);
+
+
+	UFUNCTION(BlueprintCallable)
+	TArray<FVector> ConvertCPathNode(const TArray<FCPathNode>& CPathNodes);
+
+
 
 private:
 	UPROPERTY(EditAnywhere)
@@ -44,7 +53,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UMaterialInterface> SplineMeshMaterial;
 
-
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,meta = (AllowPrivateAccess = "true"))
 	FVector GoalLocation;
 
 	UPROPERTY(EditAnywhere)

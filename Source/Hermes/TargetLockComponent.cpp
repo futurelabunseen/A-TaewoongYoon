@@ -156,17 +156,17 @@ void UTargetLockComponent::TickComponent(float DeltaTime , ELevelTick TickType ,
     }
     else
     {
-        DrawDebugSphere(
-            GetWorld(),
-            SphereLocation,
-            SphereRadius,
-            10, // 세그먼트 수, 더 많이 설정할수록 스피어가 더 부드러워집니다.
-            FColor::Red, // 색상
-            false, // 지속적으로 그릴 것인지 여부
-            -1.0f, // 지속 시간
-            0, // 깊이
-            0.3f // 라인 두께
-        );
+        //DrawDebugSphere(
+        //    GetWorld(),
+        //    SphereLocation,
+        //    SphereRadius,
+        //    10, // 세그먼트 수, 더 많이 설정할수록 스피어가 더 부드러워집니다.
+        //    FColor::Red, // 색상
+        //    false, // 지속적으로 그릴 것인지 여부
+        //    -1.0f, // 지속 시간
+        //    0, // 깊이
+        //    0.3f // 라인 두께
+        //);
     }
 
 #endif
@@ -177,8 +177,8 @@ void UTargetLockComponent::TickComponent(float DeltaTime , ELevelTick TickType ,
 void UTargetLockComponent::BeginPlay()
 {
 	Super::BeginPlay();
-    OnComponentBeginOverlap.AddDynamic(this , &UTargetLockComponent::HandleOverlapBegin);
-    OnComponentEndOverlap.AddDynamic(this , &UTargetLockComponent::HandleOverlapEnd);
+    //OnComponentBeginOverlap.AddDynamic(this , &UTargetLockComponent::HandleOverlapBegin);
+    //OnComponentEndOverlap.AddDynamic(this , &UTargetLockComponent::HandleOverlapEnd);
 }
 
 void UTargetLockComponent::HandleOverlapBegin(

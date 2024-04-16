@@ -177,8 +177,8 @@ void UTargetLockComponent::TickComponent(float DeltaTime , ELevelTick TickType ,
 void UTargetLockComponent::BeginPlay()
 {
 	Super::BeginPlay();
-    //OnComponentBeginOverlap.AddDynamic(this , &UTargetLockComponent::HandleOverlapBegin);
-    //OnComponentEndOverlap.AddDynamic(this , &UTargetLockComponent::HandleOverlapEnd);
+    OnComponentBeginOverlap.AddDynamic(this , &UTargetLockComponent::HandleOverlapBegin);
+    OnComponentEndOverlap.AddDynamic(this , &UTargetLockComponent::HandleOverlapEnd);
 }
 
 void UTargetLockComponent::HandleOverlapBegin(

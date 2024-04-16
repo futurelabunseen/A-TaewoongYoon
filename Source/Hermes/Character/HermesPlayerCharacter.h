@@ -32,6 +32,14 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable)
+	bool IsGliding();
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsGliding(bool isGliding);
+
+
+
+	UFUNCTION(BlueprintCallable)
 	TArray<AHermesPlayerCharacter*> GetTeamCharacters() const;
 
 	UFUNCTION(BlueprintCallable)
@@ -50,6 +58,13 @@ public:
 protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+
+
+	UFUNCTION(BlueprintNativeEvent)
+    void GliderInputPressed();
+    virtual void GliderInputPressed_Implementation();
+
+
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void BeginPlay();
 	virtual void PossessedBy(AController* NewController) override;
@@ -119,5 +134,13 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UWidgetComponent> HPBar;
+
+
+	bool bIsGliding;
+
+	UPROPERTY(EditAnywhere)
+	float GlidFallingSpeed = 100.f;
+
+
 };
 

@@ -18,6 +18,7 @@
 #include "Blueprint/UserWidget.h"
 #include "TargetLockComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Components/StaticMeshComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -38,6 +39,10 @@ AHermesPlayerCharacter::AHermesPlayerCharacter()
 	HPBar = CreateDefaultSubobject<UWidgetComponent>(TEXT("HP Bar"));
 	HPBar->SetupAttachment(RootComponent);
 	
+	
+
+
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -89,6 +94,31 @@ const AHermesPlayerCharacter& AHermesPlayerCharacter::GetLeader() const
 UAbilitySystemComponent* AHermesPlayerCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+bool AHermesPlayerCharacter::IsGliding()
+{
+	return bIsGliding;
+}
+
+void AHermesPlayerCharacter::SetIsGliding(bool isGliding)
+{
+	UCharacterMovementComponent* CharacterMovementComponent = CastChecked<UCharacterMovementComponent>(GetMovementComponent());
+	
+	bIsGliding = isGliding;
+	
+	static FVector InitVelocity = CharacterMovementComponent->Velocity;
+	static float InitGravityScale = CharacterMovementComponent->GravityScale;
+	if ( bIsGliding )
+	{//글라이딩시 Char movement처리
+		CharacterMovementComponent->Velocity.Z = GlidFallingSpeed * (-1);
+		CharacterMovementComponent->GravityScale = 0;
+	}
+	else
+	{//글라이딩이 아닐시 원상복구
+		CharacterMovementComponent->Velocity.Z = InitVelocity.Z;
+		CharacterMovementComponent->GravityScale = InitGravityScale;
+	}
 }
 
 TArray<AHermesPlayerCharacter*> AHermesPlayerCharacter::GetTeamCharacters() const
@@ -227,6 +257,7 @@ void AHermesPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 	{
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AHermesPlayerCharacter::GliderInputPressed);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::Look);
 		EnhancedInputComponent->BindAction(ChangeTargetCWAction, ETriggerEvent::Triggered, TargetLockComponent, FName(TEXT("ChangeTargetActorClockwise")));
@@ -284,5 +315,21 @@ void AHermesPlayerCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+
+void AHermesPlayerCharacter::GliderInputPressed_Implementation()
+{//글라이더 인풋처리
+	if ( IsGliding() )
+	{
+		SetIsGliding(false);
+	}
+
+
+	UCharacterMovementComponent* CharacterMovementComponent = CastChecked<UCharacterMovementComponent>(GetMovementComponent());
+	if ( CharacterMovementComponent->IsFalling() )
+	{
+		SetIsGliding(true);
 	}
 }

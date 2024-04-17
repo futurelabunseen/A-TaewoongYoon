@@ -19,6 +19,9 @@
 #include "TargetLockComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Animation/AnimMontage.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -96,9 +99,20 @@ UAbilitySystemComponent* AHermesPlayerCharacter::GetAbilitySystemComponent() con
 	return AbilitySystemComponent;
 }
 
-bool AHermesPlayerCharacter::IsGliding()
+bool AHermesPlayerCharacter::IsGliding() const
 {
 	return bIsGliding;
+}
+
+bool AHermesPlayerCharacter::IsClimbing() const
+{
+	return bIsClimbing;
+}
+
+float AHermesPlayerCharacter::GetClimbingYAxis() const
+{
+	UCharacterMovementComponent* CharacterMovementComponent = CastChecked<UCharacterMovementComponent>(GetMovementComponent());
+	return CharacterMovementComponent->Velocity.Z;
 }
 
 void AHermesPlayerCharacter::SetIsGliding(bool isGliding)
@@ -113,6 +127,7 @@ void AHermesPlayerCharacter::SetIsGliding(bool isGliding)
 	{//글라이딩시 Char movement처리
 		CharacterMovementComponent->Velocity.Z = GlidFallingSpeed * (-1);
 		CharacterMovementComponent->GravityScale = 0;
+		
 	}
 	else
 	{//글라이딩이 아닐시 원상복구
@@ -188,6 +203,43 @@ void AHermesPlayerCharacter::BeginPlay()
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AHermesPlayerCharacter::AutoAttack, 1.0f, true);
 }
 
+void AHermesPlayerCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	FHitResult HitResult;
+	if ( !FacingWallTrace(HitResult))
+	{
+		if ( CanClimbToTop() )
+		{
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+			check(AnimInstance);
+			check(ClimbToTopAnimMontage);
+			AnimInstance->Montage_Play(ClimbToTopAnimMontage);
+
+			FVector ClimbToTopForwardVec = GetActorForwardVector() * ClimbToTopForward;
+			FVector ClimbToTopUpVec = GetActorUpVector() * ClimbToTopUp;
+			FVector ClimbedRelativePosition = GetActorLocation() + ClimbToTopForwardVec + ClimbToTopUpVec;
+
+
+			FLatentActionInfo LatentInfo;
+			LatentInfo.CallbackTarget = this;
+			UKismetSystemLibrary::MoveComponentTo(
+				RootComponent,
+				ClimbedRelativePosition,				 
+				GetActorRotation() ,
+				false,
+				false,
+				ClimbToTopAnimMontage->GetPlayLength() ,
+				true, 
+				EMoveComponentAction::Type::Move, 
+				LatentInfo
+			);
+		}
+		DisableClimbing();
+		
+	}
+}
+
 
 
 
@@ -248,6 +300,75 @@ void AHermesPlayerCharacter::AutoAttack()
 	}
 }
 
+bool AHermesPlayerCharacter::FacingWallTrace(FHitResult& OutHitResult)
+{//벽을 마주보고 있는지 체크하고, 마주하고 있다면 hit 정보 리턴
+	FVector StartLoc = GetActorLocation() + GetActorForwardVector() + FVector(0,0,50); 
+	FVector EndLoc = StartLoc + GetActorForwardVector() * 100.f;
+
+
+	static const FName TraceTag(TEXT("WallTrace"));//Line Trace디버깅 콘솔 커맨드 : "TraceTag WallTrace"
+	FCollisionQueryParams QueryParams;
+
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.TraceTag = TraceTag;
+	return GetWorld()->LineTraceSingleByChannel(OutHitResult , StartLoc , EndLoc , ECollisionChannel::ECC_WorldStatic , QueryParams);
+}
+
+void AHermesPlayerCharacter::EnableClimbing(const FHitResult& HitResult)
+{
+	if ( bIsClimbing )
+		return;
+	bIsClimbing = true;
+	UCharacterMovementComponent* CharacterMovementComponent = CastChecked<UCharacterMovementComponent>(GetMovementComponent());
+	
+	CharacterMovementComponent->bOrientRotationToMovement = false;
+	CharacterMovementComponent->GravityScale = 0.f;
+	CharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Flying);
+	CharacterMovementComponent->BrakingDecelerationFlying = 128.f;
+	FRotator NormalRotator = UKismetMathLibrary::MakeRotFromX(HitResult.Normal);
+
+	SetActorRotation(FRotator(GetActorRotation().Pitch , NormalRotator.Yaw + 180.f , GetActorRotation().Roll));//Normal과 180도 반대방향으로 마주보도록 강제
+
+
+}
+
+void AHermesPlayerCharacter::DisableClimbing()
+{
+	if ( !bIsClimbing )
+		return;
+	bIsClimbing = false;
+	UCharacterMovementComponent* CharacterMovementComponent = CastChecked<UCharacterMovementComponent>(GetMovementComponent());
+	CharacterMovementComponent->bOrientRotationToMovement = true;
+	CharacterMovementComponent->GravityScale = 1.0f;
+	CharacterMovementComponent->BrakingDecelerationFlying = 0.f;
+	CharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Falling);
+}
+
+bool AHermesPlayerCharacter::CanClimbToTop() const
+{//벽타기 중에 정상에 오를수 있는지 조건 검사
+	//판단 로직: 사전에 정의된 ForwardVector + UpVector를 더한곳에 LineTrace를 취해서 아무것도 없으면 true
+	if ( !bIsClimbing )
+		return false;
+	FVector ClimbToTopForwardVec = GetActorForwardVector() * ClimbToTopForward;
+	FVector ClimbToTopUpVec = GetActorUpVector() * ClimbToTopUp;
+
+	FVector LineTraceStartLoc = GetActorLocation() + ClimbToTopForwardVec + ClimbToTopUpVec - GetActorRightVector() * GetCapsuleComponent()->GetScaledCapsuleRadius();
+	FVector LineTraceEndLoc = LineTraceStartLoc + GetActorRightVector() * 2 * GetCapsuleComponent()->GetScaledCapsuleRadius();
+
+	FHitResult HitResult;
+
+
+	static const FName TraceTag(TEXT("CanClimbTrace"));
+	FCollisionQueryParams QueryParams;
+
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.TraceTag = TraceTag;
+
+	return !GetWorld()->LineTraceSingleByChannel(HitResult , LineTraceStartLoc , LineTraceEndLoc , ECollisionChannel::ECC_WorldStatic , QueryParams);
+
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -258,6 +379,7 @@ void AHermesPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AHermesPlayerCharacter::GliderInputPressed);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AHermesPlayerCharacter::ClimbCancelInputPressed);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHermesPlayerCharacter::Look);
 		EnhancedInputComponent->BindAction(ChangeTargetCWAction, ETriggerEvent::Triggered, TargetLockComponent, FName(TEXT("ChangeTargetActorClockwise")));
@@ -287,21 +409,42 @@ void AHermesPlayerCharacter::Move(const FInputActionValue& Value)
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
+	if ( bIsGliding )
+		MovementVector *= 2.f;
+
 	if (Controller != nullptr)
 	{
+		FHitResult HitResult;
+		if ( FacingWallTrace(HitResult) &&  MovementVector.Y != 0)
+		{
+			EnableClimbing(HitResult);
+		}
+
+
+
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		// get forward vector
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
+		const FVector ActorUpDirection = GetActorUpVector();
+		const FVector ActorRightDirection = GetActorRightVector();
 		// get right vector 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
 		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+		if ( bIsClimbing )
+		{
+			AddMovementInput(ActorRightDirection, MovementVector.X * ClimbingSpeed);
+			AddMovementInput(ActorUpDirection , MovementVector.Y * ClimbingSpeed);
+		}
+		else
+		{
+			AddMovementInput(RightDirection, MovementVector.X);
+			AddMovementInput(ForwardDirection, MovementVector.Y);
+		}
+		
 	}
 }
 
@@ -332,4 +475,10 @@ void AHermesPlayerCharacter::GliderInputPressed_Implementation()
 	{
 		SetIsGliding(true);
 	}
+}
+
+void AHermesPlayerCharacter::ClimbCancelInputPressed()
+{
+	if ( bIsClimbing )
+		DisableClimbing();
 }

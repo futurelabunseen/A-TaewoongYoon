@@ -32,7 +32,13 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable)
-	bool IsGliding();
+	bool IsGliding() const;
+
+	UFUNCTION(BlueprintCallable)
+	bool IsClimbing() const;
+
+	UFUNCTION(BlueprintCallable)
+	float GetClimbingYAxis() const;
 
 	UFUNCTION(BlueprintCallable)
 	void SetIsGliding(bool isGliding);
@@ -64,14 +70,22 @@ protected:
     void GliderInputPressed();
     virtual void GliderInputPressed_Implementation();
 
+	void ClimbCancelInputPressed();
+
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void BeginPlay();
+	virtual void Tick(float DeltaTime) override;
 	virtual void PossessedBy(AController* NewController) override;
 private:
 	void GASInputPressed(int32 InputId);
 	void GASInputReleased(int32 InputId);
 	void AutoAttack();
+	bool FacingWallTrace(FHitResult& OutHitResult);
+	void EnableClimbing(const FHitResult& HitResult);
+	void DisableClimbing();
+	bool CanClimbToTop() const;
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> CameraBoom;
@@ -136,10 +150,27 @@ private:
 	TObjectPtr<class UWidgetComponent> HPBar;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UAnimMontage> ClimbToTopAnimMontage;
+
+
 	bool bIsGliding;
 
 	UPROPERTY(EditAnywhere)
 	float GlidFallingSpeed = 100.f;
+
+	UPROPERTY(EditAnywhere)
+	float ClimbingSpeed = 0.2f;
+
+	UPROPERTY(EditAnywhere)
+	float ClimbToTopForward = 50.f;//벽타기에서 정상에 오르는 검사를 수행할시 사용될 Forward값
+
+	UPROPERTY(EditAnywhere)
+	float ClimbToTopUp = 150.f;//벽타기에서 정상에 오르는 검사를 수행할시 사용될 Up값
+
+
+	bool bIsClimbing;
+
 
 
 };

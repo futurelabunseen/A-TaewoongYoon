@@ -33,6 +33,19 @@ public:
 		return Data << 31;
 	}
 
+
+	inline void SetIsWall(bool IsWall)
+	{
+		Data &= 0xFFFFFFFD;//11111111111111111111111111111101(2비트 값 날리기)
+		Data |= (IsWall << 1);//0~~~00000010(2비트값 1로 설정)
+	}
+
+	inline bool GetIsWall() const
+	{
+		return Data & 0x00000002;
+	}
+
+
 	~CPathOctree()
 	{
 		delete[] Children;

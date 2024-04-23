@@ -26,10 +26,14 @@ public:
 	// You may also save other information in the Data field of an Octree, as only the least significant bit is used.
 	// This is called during graph generation, for every subtree including leafs, so potentially millions of times. 
 	virtual bool RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector TreeLocation , uint32 Depth) override;
+
 protected:
 	virtual void BeginPlay() override;
 
 private:
+	
+
+
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class UStaticMesh> WallMesh;//벽으로 판단할 Mesh
 

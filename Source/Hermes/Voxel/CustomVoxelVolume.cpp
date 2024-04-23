@@ -28,10 +28,8 @@ bool ACustomVoxelVolume::RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector T
 					if ( UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(OverlapResult.GetComponent()) )
 					{
 						if ( MeshComponent->GetStaticMesh()->GetFName() == WallMesh->GetFName() )
-						{//설정한 WallMesh일시 Wall데이터 부여(플러그인 제작자 방식대로 Data비트연산 사용)
-							uint32 IsWall = true;
-							OctreeRef->Data &= 0xFFFFFFFD;//11111111111111111111111111111101(2비트 값 날리기)
-							OctreeRef->Data |= (IsWall << 1);//0~~~00000010(2비트값 1로 설정
+						{//설정한 WallMesh일시 
+							OctreeRef->SetIsWall(true);
 							break;
 						}
 					}
@@ -44,6 +42,7 @@ bool ACustomVoxelVolume::RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector T
 	return IsFree;
 	
 }
+
 
 void ACustomVoxelVolume::BeginPlay()
 {

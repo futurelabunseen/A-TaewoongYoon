@@ -45,6 +45,17 @@ public:
 		return Data & 0x00000002;
 	}
 
+	inline void SetIsGround(bool IsGround)
+	{
+		Data &= 0xFFFFFFFB;//11111111111111111111111111111011(3비트 값 날리기)
+		Data |= (IsGround << 2);//0~~~00000100(3비트값 1로 설정)
+	}
+
+	inline bool GetIsGround() const
+	{
+		return Data & 0x00000004;
+	}
+
 
 	~CPathOctree()
 	{

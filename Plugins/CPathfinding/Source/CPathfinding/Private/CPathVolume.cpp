@@ -68,24 +68,36 @@ bool ACPathVolume::DrawDebugVoxel(uint32 TreeID, bool DrawIfNotLeaf, float Durat
 	bool IsFree = Tree->GetIsFree();
 	if (IsFree)
 	{
+		
 		if (!DrawFree)
 			return false;
-	}
-	else
-	{
 		bool IsWall = Tree->GetIsWall();
-		if (!DrawOccupied && !DrawWallOccupied)
-			return false;
-		if ( DrawWallOccupied && IsWall )
+		bool IsGround = Tree->GetIsGround();
+
+		if ( IsWall && IsGround )
+		{
+			Color = FColor::Yellow;
+			Thickness *= 2.5;
+		}
+		else if (IsWall )
 		{//벽 디버그 draw
 			Color = FColor::Cyan;
 			Thickness *= 1.5;
 		}
-		else if(DrawOccupied)
-		{
-			Color = FColor::Red;
+		else if ( IsGround )
+		{//땅 디버그 draw
+			Color = FColor::Magenta;
 			Thickness *= 1.5;
 		}
+
+	}
+	else
+	{
+		
+		if (!DrawOccupied)
+			return false;
+		Color = FColor::Red;
+		Thickness *= 1.5;
 		
 	}
 

@@ -4,18 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "CPathVolume.h"
-#include "CustomVoxelVolume.generated.h"
+#include "CPathVolumeHermes.generated.h"
 
 /**
  * 
  */
-UCLASS(Abstract)
-class HERMES_API ACustomVoxelVolume : public ACPathVolume
+UCLASS()
+class CPATHFINDING_API ACPathVolumeHermes : public ACPathVolume
 {
 	GENERATED_BODY()
-
 public:
-	ACustomVoxelVolume();
 		// ------- EXTENDABLE ------
 
 	// Overwrite this function to change the priority of nodes as they are selected for the path.
@@ -26,5 +24,4 @@ public:
 	// You may also save other information in the Data field of an Octree, as only the least significant bit is used.
 	// This is called during graph generation, for every subtree including leafs, so potentially millions of times. 
 	virtual bool RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector TreeLocation , uint32 Depth) override;
-
 };

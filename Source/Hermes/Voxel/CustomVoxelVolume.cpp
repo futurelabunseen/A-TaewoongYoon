@@ -14,37 +14,16 @@ void ACustomVoxelVolume::CalcFitness(CPathAStarNode& Node , FVector TargetLocati
 
 bool ACustomVoxelVolume::RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector TreeLocation , uint32 Depth)
 {
-	bool IsFree = true;
-	for (const auto& Shape : TraceShapesByDepth[Depth])
+	bool IsFree = Super::RecheckOctreeAtDepth(OctreeRef, TreeLocation, Depth);
+	if (IsFree)
 	{
-		if (GetWorld()->OverlapAnyTestByChannel(TreeLocation, FQuat(FRotator(0)), TraceChannel, Shape))
-		{//아무 액터나 충돌시
-			TArray<FOverlapResult> OverlapResults;
-			if (GetWorld()->OverlapMultiByChannel(OverlapResults, TreeLocation, FQuat(FRotator(0)),TraceChannel, Shape))
-			{
-				IsFree = false;
-				for (const auto& OverlapResult : OverlapResults )
-				{
-					if ( UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(OverlapResult.GetComponent()) )
-					{
-						if ( MeshComponent->GetStaticMesh()->GetFName() == WallMesh->GetFName() )
-						{//설정한 WallMesh일시 
-							OctreeRef->SetIsWall(true);
-							break;
-						}
-					}
-				}
-				break;
-			}
-		}
+		bool IsWall1 = GetWorld()->LineTraceTestByChannel(TreeLocation, FVector(TreeLocation.X, TreeLocation.Y- VoxelSize*1.49, TreeLocation.Z), TraceChannel);
+		bool IsWall2 = GetWorld()->LineTraceTestByChannel(TreeLocation, FVector(TreeLocation.X, TreeLocation.Y+ VoxelSize*1.49, TreeLocation.Z), TraceChannel);
+		bool IsWall3 = GetWorld()->LineTraceTestByChannel(TreeLocation, FVector(TreeLocation.X- VoxelSize*1.49, TreeLocation.Y, TreeLocation.Z), TraceChannel);
+		bool IsWall4 = GetWorld()->LineTraceTestByChannel(TreeLocation, FVector(TreeLocation.X+ VoxelSize*1.49, TreeLocation.Y, TreeLocation.Z), TraceChannel);
+		OctreeRef->SetIsWall(IsWall1 || IsWall2 || IsWall3 || IsWall4);
 	}
-	OctreeRef->SetIsFree(IsFree);
 	return IsFree;
-	
 }
 
 
-void ACustomVoxelVolume::BeginPlay()
-{
-	Super::BeginPlay();//부모 BeginPlay함수에서 복셀 생성
-}

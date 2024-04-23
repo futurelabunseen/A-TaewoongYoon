@@ -145,8 +145,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CPath|Render")
 		bool DrawOccupied = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CPath|Render")
-		bool DrawWallOccupied = false;
 
 	// You can hide selected depths from rendering
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, EditFixedSize, Category = "CPath|Render")

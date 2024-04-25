@@ -4,6 +4,25 @@
 #include "CPathVolumeHermes.h"
 
 
+int ACPathVolumeHermes::GetVoxelType(const FVector& WorldLocation)
+{
+	uint32 TreeID;
+	FindClosestFreeLeaf(WorldLocation , TreeID);//Voxel ID서치
+	CPathOctree* CurrentOctreeNode = FindTreeByID(TreeID);//Voxel 옥트리 노드 서치
+	if ( CurrentOctreeNode->GetIsGround() )
+	{//땅
+		return 0;
+	}
+	else if ( CurrentOctreeNode->GetIsWall() )
+	{//벽
+		return 1;
+	}
+	else
+	{//공중
+		return 2;
+	}
+}
+
 void ACPathVolumeHermes::CalcFitness(CPathAStarNode& Node , FVector TargetLocation , int32 UserData)
 {
 	check(Node.PreviousNode);

@@ -6,7 +6,8 @@
 #include "Runtime/NavigationSystem/Public/NavigationPath.h"
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
-#include "CPathFindPath.h"
+#include "CPathVolumeHermes.h"
+#include "Kismet/GameplayStatics.h"
 
 UGA_Pathfinding::UGA_Pathfinding()
 	:
@@ -40,7 +41,20 @@ void UGA_Pathfinding::CancelAbility(const FGameplayAbilitySpecHandle Handle , co
 }
 
 void UGA_Pathfinding::ActivateAbility(const FGameplayAbilitySpecHandle Handle , const FGameplayAbilityActorInfo* ActorInfo , const FGameplayAbilityActivationInfo ActivationInfo , const FGameplayEventData* TriggerEventData)
-{//Spline Component를 Avatar Actor에 부착
+{//VoxelVolume참조 초기화 + Spline Component를 Avatar Actor에 부착
+
+	TArray<AActor*> PathVolumes;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld() , ACPathVolume::StaticClass() , PathVolumes);
+	check(PathVolumes.Num() > 0);
+	for ( const auto& PathVolume : PathVolumes )
+	{
+		ACPathVolumeHermes* PathVolumeHermes = CastChecked<ACPathVolumeHermes>(PathVolume);
+		VoxelVolume = PathVolumeHermes;
+		break;
+	}
+
+
+
 	AActor* AvatarActor = GetAvatarActorFromActorInfo();
 	USplineComponent* SplineComponent = NewObject<USplineComponent>(AvatarActor , USplineComponent::StaticClass());
 	check(SplineComponent);
@@ -53,7 +67,7 @@ void UGA_Pathfinding::ActivateAbility(const FGameplayAbilitySpecHandle Handle , 
 		check(SplineMeshComponent);
 		SplineMeshComponent->SetMobility(EComponentMobility::Movable);
 		SplineMeshComponent->SetStaticMesh(SplineStaticMesh);
-		SplineMeshComponent->SetMaterial(0,SplineMeshMaterial);
+		SplineMeshComponent->SetMaterial(0,AirRouteMaterial);
 		SplineMeshComponent->SetForwardAxis(ESplineMeshAxis::Z);
 		SplineMeshComponent->SetStartScale(FVector2D(SplineTickness,SplineTickness));
 		SplineMeshComponent->SetEndScale(FVector2D(SplineTickness,SplineTickness));
@@ -110,6 +124,20 @@ void UGA_Pathfinding::UpdatePath(const TArray<FVector>& PathPoints)
 				splineEndPointTangent,
 				true
 			);
+			switch ( VoxelVolume->GetVoxelType((splineStartPointLocation + splineEndPointLocation) /2) )
+			{
+			case 0:
+				SplineMeshComponents[i]->SetMaterial(0 , GroundRouteMaterial);
+				break;
+			case 1:
+				SplineMeshComponents[i]->SetMaterial(0 , WallRouteMaterial);
+				break;
+			case 2:
+				SplineMeshComponents[i]->SetMaterial(0 , AirRouteMaterial);
+				break;
+			}
+			
+			
 			SplineMeshComponents[i]->SetVisibility(true);
 		}
 		

@@ -44,14 +44,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	TArray<FVector> ConvertCPathNode(const TArray<FCPathNode>& CPathNodes);
 
-
+public:
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<class ACPathVolumeHermes> VoxelVolume;
 
 private:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UStaticMesh> SplineStaticMesh;
 
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<UMaterialInterface> SplineMeshMaterial;
+	
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,meta = (AllowPrivateAccess = "true"))
 	FVector GoalLocation;
@@ -64,4 +65,15 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float RouteZHeight;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UMaterialInterface> AirRouteMaterial;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UMaterialInterface> GroundRouteMaterial;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UMaterialInterface> WallRouteMaterial;
+	
+	
 };

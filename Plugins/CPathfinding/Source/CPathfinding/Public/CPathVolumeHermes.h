@@ -14,6 +14,11 @@ class CPATHFINDING_API ACPathVolumeHermes : public ACPathVolume
 {
 	GENERATED_BODY()
 public:
+
+	int GetVoxelType(const FVector& WorldLocation);
+
+
+
 		// ------- EXTENDABLE ------
 
 	// Overwrite this function to change the priority of nodes as they are selected for the path.

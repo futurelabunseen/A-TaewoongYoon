@@ -25,7 +25,7 @@ public class Hermes : ModuleRules
 			}
 		);
 
-        PublicIncludePaths.AddRange(new string[] { "CPathfinding/Public"});
+        //PublicIncludePaths.AddRange(new string[] { "CPathfinding/Public"});
 
         PrivateIncludePaths.Add("Hermes");
     }

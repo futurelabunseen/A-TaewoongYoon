@@ -24,4 +24,13 @@ public:
 	// You may also save other information in the Data field of an Octree, as only the least significant bit is used.
 	// This is called during graph generation, for every subtree including leafs, so potentially millions of times. 
 	virtual bool RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector TreeLocation , uint32 Depth) override;
+
+	inline bool ExtractIsGoundFromData(uint32 TreeUserData)
+	{
+		return TreeUserData & 0x00000004;
+	}
+	inline bool ExtractIsWallFromData(uint32 TreeUserData)
+	{
+		return TreeUserData & 0x00000002;
+	}
 };

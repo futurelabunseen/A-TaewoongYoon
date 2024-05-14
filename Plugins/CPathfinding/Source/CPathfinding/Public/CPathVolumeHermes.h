@@ -17,12 +17,12 @@ public:
 
 	int GetVoxelType(const FVector& WorldLocation);
 
+	virtual void BeginPlay() override;
 
+	// ------- EXTENDABLE ------
 
-		// ------- EXTENDABLE ------
-
-	// Overwrite this function to change the priority of nodes as they are selected for the path.
-	// Note that this is potentially called thousands of times per FindPath call, so it shouldnt be too complex (unless your graph not very dense)
+// Overwrite this function to change the priority of nodes as they are selected for the path.
+// Note that this is potentially called thousands of times per FindPath call, so it shouldnt be too complex (unless your graph not very dense)
 	virtual void CalcFitness(CPathAStarNode& Node , FVector TargetLocation , int32 UserData) override;
 
 	// Overwrite this function to change the default conditions of a tree being free/ocupied.
@@ -30,7 +30,7 @@ public:
 	// This is called during graph generation, for every subtree including leafs, so potentially millions of times. 
 	virtual bool RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector TreeLocation , uint32 Depth) override;
 
-	inline bool ExtractIsGoundFromData(uint32 TreeUserData)
+	inline bool ExtractIsGroundFromData(uint32 TreeUserData)
 	{
 		return TreeUserData & 0x00000004;
 	}
@@ -38,4 +38,5 @@ public:
 	{
 		return TreeUserData & 0x00000002;
 	}
+
 };

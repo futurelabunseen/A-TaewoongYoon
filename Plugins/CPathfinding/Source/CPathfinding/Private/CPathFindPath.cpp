@@ -49,6 +49,7 @@ void CPathAStar::DeleteInstance(UWorld* World)
 
 ECPathfindingFailReason CPathAStar::FindPath(ACPathVolume* VolumeRef, FCPathResult* Result, FVector Start, FVector End, uint32 SmoothingPasses, int32 UserData, float TimeLimit, bool RequestRawPath, bool RequestUserPath)
 {
+	
 	bStop = false;
 
 #if WITH_EDITOR
@@ -126,12 +127,45 @@ ECPathfindingFailReason CPathAStar::FindPath(ACPathVolume* VolumeRef, FCPathResu
 		std::vector<CPathAStarNode> Neighbours = VolumeRef->FindFreeNeighbourLeafs(CurrentNode);
 		for (CPathAStarNode NewTreeNode : Neighbours)
 		{
-
 			if (!VisitedNodes.count(NewTreeNode))
 			{
 				NewTreeNode.PreviousNode = ProcessedNodes.back().get();
 				NewTreeNode.WorldLocation = VolumeRef->WorldLocationFromTreeID(NewTreeNode.TreeID);
+				
+				if ( NewTreeNode.WorldLocation.Z > CurrentNode.WorldLocation.Z )
+				{//고도 상승 예외처리
+					bool IsPassable = ExtractIsWallFromData(NewTreeNode.TreeUserData) || 
+						(!ExtractIsWallFromData(NewTreeNode.TreeUserData) && ExtractIsWallFromData(CurrentNode.TreeUserData));
+					if ( !IsPassable )
+						continue;
+				}
+				else if ( NewTreeNode.WorldLocation.Z <= CurrentNode.WorldLocation.Z )
+				{//고도 하강 예외처리
+					bool IsGliding = !ExtractIsGroundFromData(NewTreeNode.TreeUserData) && !ExtractIsWallFromData(NewTreeNode.TreeUserData);
+					if ( IsGliding )
+					{
+						if ( CurrentNode.GlidingStartLocation.IsNearlyZero() )
+						{
+							NewTreeNode.GlidingStartLocation = CurrentNode.WorldLocation;
+						}
+						else
+						{
+							NewTreeNode.GlidingStartLocation = CurrentNode.GlidingStartLocation;
+							FVector currentPositionToGlidingStart = NewTreeNode.GlidingStartLocation - CurrentNode.WorldLocation;
+							//UE_LOG(LogTemp , Log , TEXT("%f %f %f") , currentPositionToGlidingStart.X , currentPositionToGlidingStart.Y ,currentPositionToGlidingStart.Z);
+							float gradient = FMath::Sqrt(FMath::Pow(currentPositionToGlidingStart.X , 2) + FMath::Pow(currentPositionToGlidingStart.Y , 2))
+								/ currentPositionToGlidingStart.Z;
+							if ( gradient > 0.7f )
+								continue;
+						}
 
+
+					}
+					else
+					{
+						NewTreeNode.GlidingStartLocation = FVector::ZeroVector;
+					}
+				}
 				// CalcFitness(NewNode); - this is inline and not virtual so in theory faster, but not extendable.
 				// Also from my testing, the speed difference between the two was unnoticeable at 150000 nodes processed.
 

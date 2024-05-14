@@ -42,6 +42,8 @@ public:
 		// Used in removing nodes that lay on the same line. The biger the number, the more nodes will be removed, but the path potentially loses data.
 	float LineAngleToleranceDegrees = 3;
 
+
+
 protected:
 
 	inline float EucDistance(CPathAStarNode& Node, FVector TargetWorldLocation) const;
@@ -66,6 +68,16 @@ private:
 	friend class FCPathRunnableFindPath;
 
 	static CPathAStar* GlobalInstance;
+
+
+	inline bool ExtractIsGroundFromData(uint32 TreeUserData)
+	{
+		return TreeUserData & 0x00000004;
+	}
+	inline bool ExtractIsWallFromData(uint32 TreeUserData)
+	{
+		return TreeUserData & 0x00000002;
+	}
 
 };
 

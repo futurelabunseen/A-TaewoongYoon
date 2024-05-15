@@ -155,7 +155,7 @@ ECPathfindingFailReason CPathAStar::FindPath(ACPathVolume* VolumeRef, FCPathResu
 							//UE_LOG(LogTemp , Log , TEXT("%f %f %f") , currentPositionToGlidingStart.X , currentPositionToGlidingStart.Y ,currentPositionToGlidingStart.Z);
 							float gradient = FMath::Sqrt(FMath::Pow(currentPositionToGlidingStart.X , 2) + FMath::Pow(currentPositionToGlidingStart.Y , 2))
 								/ currentPositionToGlidingStart.Z;
-							UE_LOG(LogTemp , Log , TEXT("%f %f %f") , NewTreeNode.GlidingStartLocation.X , NewTreeNode.GlidingStartLocation.Y , NewTreeNode.GlidingStartLocation.Z);
+							//UE_LOG(LogTemp , Log , TEXT("%f %f %f") , NewTreeNode.GlidingStartLocation.X , NewTreeNode.GlidingStartLocation.Y , NewTreeNode.GlidingStartLocation.Z);
 							if ( gradient > 0.4f )
 								continue;
 						}

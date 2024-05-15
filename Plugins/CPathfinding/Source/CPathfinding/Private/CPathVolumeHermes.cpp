@@ -38,8 +38,8 @@ void ACPathVolumeHermes::CalcFitness(CPathAStarNode& Node , FVector TargetLocati
 	Node.DistanceSoFar = Node.PreviousNode->DistanceSoFar + FVector::Distance(Node.PreviousNode->WorldLocation, Node.WorldLocation);//현재노드까지 거리누적
 	
 	
-	if ( ExtractIsGroundFromData(Node.TreeUserData) )
-		Node.DistanceSoFar += 100;
+	/*if ( ExtractIsGroundFromData(Node.TreeUserData) )
+		Node.DistanceSoFar += 100;*/
 	
 	Node.FitnessResult = Node.DistanceSoFar + 3.5f * FVector::Distance(Node.WorldLocation, TargetLocation);//FitnessResult: A*평가값, 낮을수록 우선순위
 }

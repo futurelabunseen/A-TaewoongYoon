@@ -19,7 +19,7 @@
 #include "CPathVolume.generated.h"
 
 
-DECLARE_DELEGATE(FGraphGenerationCompleteDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGraphGenerationCompleteDelegate);
 
 class ACPathCore;
 
@@ -244,6 +244,7 @@ protected:
 	ACPathCore* CoreInstance = nullptr;
 
 	//Voxel Graph생성작업 완료 후 호출하게되는 delegate
+	UPROPERTY()
 	FGraphGenerationCompleteDelegate GenerationCompleteDelegate;
 public:
 

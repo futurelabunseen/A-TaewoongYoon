@@ -5,6 +5,16 @@
 #include "CPathFindPath.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMeshActor.h"
+#include "Components/BoxComponent.h"
+#include "Engine/SceneCapture2D.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
+
+ACPathVolumeHermes::ACPathVolumeHermes()
+{
+	HISMComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HISMComponent"));
+}
 
 int ACPathVolumeHermes::GetVoxelType(const FVector& WorldLocation)
 {
@@ -31,7 +41,8 @@ int ACPathVolumeHermes::GetVoxelType(const FVector& WorldLocation)
 void ACPathVolumeHermes::BeginPlay()
 {
 	//voxel octree를 순회하며 3D 미니맵을 구성하는 static mesh스폰하는 함수 등록
-	GenerationCompleteDelegate.BindUObject(this , &ACPathVolumeHermes::SpawnMinimapVoxel);
+	GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::SpawnMinimapVoxel);
+	GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::SpawnMinimapCamera);
 	Super::BeginPlay();//volume안에 voxel들 생성
 }
 
@@ -84,6 +95,32 @@ bool ACPathVolumeHermes::RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector T
 	return IsFree;
 }
 
+void ACPathVolumeHermes::SpawnMinimapCamera()
+{
+	check(MinimapRenderTarget);
+	
+	ASceneCapture2D* MinimapSceneCapture2D = GetWorld()->SpawnActor<ASceneCapture2D>(
+		ASceneCapture2D::StaticClass(),
+		GetActorLocation() + FVector(VolumeBox->GetScaledBoxExtent().X,0,-VolumeBox->GetScaledBoxExtent().Z) ,
+		FRotator(-45,-180,0)
+	);
+	if ( MinimapSceneCapture2D )
+	{
+		// Access the SceneCaptureComponent2D
+        USceneCaptureComponent2D* CaptureComponent = MinimapSceneCapture2D->GetCaptureComponent2D();
+        if (CaptureComponent)
+        {
+            // Set the render target
+            CaptureComponent->TextureTarget = MinimapRenderTarget;
+            CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+            CaptureComponent->bCaptureEveryFrame = true;
+
+			// Disable shadows in the capture component
+            CaptureComponent->ShowFlags.DynamicShadows = false;
+        }
+	}
+}
+
 void ACPathVolumeHermes::SpawnMinimapVoxel()
 {
 	//    0. Voxel 멀티쓰레드 생성작업 wait(delegate를 이용해서 대기)
@@ -91,36 +128,22 @@ void ACPathVolumeHermes::SpawnMinimapVoxel()
 	//    2. OuterIndex loop돌기(NodeCount[3] 배열 이용)
 	//    3. 만약 해당 Octree가 벽이나 바닥일시 SpawnMinimapStaticMesh호출
 	uint32 OuterNodeCount = NodeCount[0] * NodeCount[1] * NodeCount[2];//OuterNodeCount: 0depth인 voxel의 개수
-	for ( uint32 i = 0; i < OuterNodeCount; i++ )
+	ensure(MinimapVoxelMesh);
+	HISMComponent->SetStaticMesh(MinimapVoxelMesh);
+	HISMComponent->SetMaterial(0, MinimapVoxelMesh->GetMaterial(0));
+	for (uint32 i = 0; i < OuterNodeCount; i++) 
 	{
+		FTransform InstanceTransform;
 		CPathOctree* Octree = &Octrees[i];
-		if ( Octree->GetIsGround() || Octree->GetIsWall() )
+		if ( !Octree->GetIsFree() )
 		{
 			FVector VoxelLocation = WorldLocationFromTreeID(i);
-			SpawnMinimapStaticMesh(VoxelLocation , GetActorRotation());
+			FVector VoxelLocationOffset = FVector(0 , 0 , -VolumeBox->GetScaledBoxExtent().Z * 2.f);
+			InstanceTransform.SetLocation(VoxelLocation + VoxelLocationOffset);
+			InstanceTransform.SetScale3D(FVector(VoxelSize / 100.f));
+			HISMComponent->AddInstance(InstanceTransform);
 		}
 	}
-}
-
-void ACPathVolumeHermes::SpawnMinimapStaticMesh(FVector Location,FRotator Rotation)
-{
-	ensure(MinimapVoxelMesh);
-	 //StaticMesh액터 스폰
-    AStaticMeshActor* NewMeshActor = GetWorld()->SpawnActor<AStaticMeshActor>(
-		AStaticMeshActor::StaticClass(), Location, Rotation);
 
 
-
-    //StaticMesh적용
-    if (NewMeshActor)
-    {
-        UStaticMeshComponent* MeshComponent = NewMeshActor->GetStaticMeshComponent();
-        if (MeshComponent)
-        {
-			MeshComponent->SetMobility(EComponentMobility::Movable);
-			MeshComponent->SetWorldScale3D(FVector(VoxelSize / 100.0f));//VoxelSize에 맞게 스케일 적용
-            MeshComponent->SetStaticMesh(MinimapVoxelMesh);
-			MeshComponent->SetMobility(EComponentMobility::Static);
-        }
-    }
 }

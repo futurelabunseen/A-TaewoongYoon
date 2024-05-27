@@ -1144,7 +1144,7 @@ void ACPathVolume::InitialGenerationUpdate()
 
 		if (GenerationCompleteDelegate.IsBound())
 		{//voxel생성후 수행하게되는 delegate존재시 호출
-			GenerationCompleteDelegate.Execute();
+			GenerationCompleteDelegate.Broadcast();
 		}
 
 		CleanFinishedGenerators();

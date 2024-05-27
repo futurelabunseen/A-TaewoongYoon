@@ -14,6 +14,7 @@ class CPATHFINDING_API ACPathVolumeHermes : public ACPathVolume
 {
 	GENERATED_BODY()
 public:
+	ACPathVolumeHermes();
 
 	int GetVoxelType(const FVector& WorldLocation);
 
@@ -39,12 +40,24 @@ public:
 		return TreeUserData & 0x00000002;
 	}
 private:
-	void SpawnMinimapVoxel();
+	UFUNCTION()
+	void SpawnMinimapCamera();
 
-	//(Location,Rotation)에 StaticMesh스폰
-	void SpawnMinimapStaticMesh(FVector Location,FRotator Rotation);
+	UFUNCTION()
+	void SpawnMinimapVoxel();
+	
+
 
 private:
+
+	UPROPERTY()
+	TObjectPtr<class UHierarchicalInstancedStaticMeshComponent> HISMComponent;
+
 	UPROPERTY(EditAnywhere,Category = "Minimap")
 	TObjectPtr<UStaticMesh> MinimapVoxelMesh;
+
+	UPROPERTY(EditAnywhere,Category = "Minimap")
+    TObjectPtr<class UTextureRenderTarget2D> MinimapRenderTarget;
+
+
 };

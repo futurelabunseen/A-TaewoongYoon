@@ -18,6 +18,9 @@
 #include "CPathAsyncVolumeGeneration.h"
 #include "CPathVolume.generated.h"
 
+
+DECLARE_DELEGATE(FGraphGenerationCompleteDelegate);
+
 class ACPathCore;
 
 UCLASS()
@@ -239,6 +242,9 @@ protected:
 	// decide that this is useless and destroy it -_-
 	UPROPERTY()
 	ACPathCore* CoreInstance = nullptr;
+
+	//Voxel Graph생성작업 완료 후 호출하게되는 delegate
+	FGraphGenerationCompleteDelegate GenerationCompleteDelegate;
 public:
 
 	// Location of the first voxel, set during graph generation

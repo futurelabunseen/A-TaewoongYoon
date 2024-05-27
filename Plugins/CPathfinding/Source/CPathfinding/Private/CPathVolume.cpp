@@ -236,16 +236,16 @@ bool ACPathVolume::GenerateGraph()
 
 	float Divider = VoxelSize * FMath::Pow(2.f, OctreeDepth);
 
-	NodeCount[0] = FMath::CeilToInt(VolumeBox->GetScaledBoxExtent().X * 2.0 / Divider);
-	NodeCount[1] = FMath::CeilToInt(VolumeBox->GetScaledBoxExtent().Y * 2.0 / Divider);
-	NodeCount[2] = FMath::CeilToInt(VolumeBox->GetScaledBoxExtent().Z * 2.0 / Divider);
+	NodeCount[0] = FMath::CeilToInt(VolumeBox->GetScaledBoxExtent().X * 2.0 / Divider);//x축으로 몇개의 OuterVoxel이 있는지
+	NodeCount[1] = FMath::CeilToInt(VolumeBox->GetScaledBoxExtent().Y * 2.0 / Divider);//y축으로 몇개의 OuterVoxel이 있는지
+	NodeCount[2] = FMath::CeilToInt(VolumeBox->GetScaledBoxExtent().Z * 2.0 / Divider);//z축으로 몇개의 OuterVoxel이 있는지
 
 	checkf(OctreeDepth <= MAX_DEPTH && OctreeDepth >= 0, TEXT("CPATH - Graph Generation:::OctreeDepth must be within 0 and MAX_DEPTH"));
 	//checkf(AgentShape == ECollisionShapeType::Capsule || AgentShape == ECollisionShapeType::Sphere || AgentShape == ECollisionShapeType::Box, TEXT("CPATH - Graph Generation:::Agent shape must be Capsule, Sphere or Box"));
 
 
 	for (int i = 0; i <= OctreeDepth; i++)
-	{
+	{//OctreeDepth의 의미: 기본 VoxelSize만큼 복셀생성하고 세부적으로 몇 Depth를 더 생성할지
 
 		LookupTable_VoxelSizeByDepth[i] = VoxelSize * FMath::Pow(2.f, OctreeDepth - i);
 		TraceShapesByDepth.emplace_back();
@@ -272,7 +272,7 @@ bool ACPathVolume::GenerateGraph()
 
 	uint32 OuterNodeCount = NodeCount[0] * NodeCount[1] * NodeCount[2];
 	checkf(OuterNodeCount < DEPTH_0_LIMIT, TEXT("CPATH - Graph Generation:::Depth 0 is too dense, increase OctreeDepth and/or voxel size, or decrease volume area."));
-	Octrees = new CPathOctree[OuterNodeCount];
+	Octrees = new CPathOctree[OuterNodeCount];//Octrees동적생성(OuterNodeCount는 8이 아니라 x,y,z축 각각의 복셀개수의 곱과 같음)
 
 	// If we use all logical threads in the system, the rest of the game
 	// will have no computing power to work with. From my small test sample
@@ -875,7 +875,7 @@ CPathOctree* ACPathVolume::FindNeighbourByID(uint32 TreeID, ENeighbourDirection 
 	// Depth 0, getting neighbour from Octrees
 	uint32 Depth = ExtractDepth(TreeID);
 	if (Depth == 0)
-	{
+	{//가장 최상위 depth인경우: 그냥 바로 옆 옥트리 포인터 얼리 리턴
 		int OuterIndex = ExtractOuterIndex(TreeID);
 		FVector NeighbourLocalCoords = LocalCoordsInt3FromOuterIndex(OuterIndex) + LookupTable_NeighbourOffsetByDirection[Direction];
 
@@ -924,19 +924,19 @@ CPathOctree* ACPathVolume::FindNeighbourByID(uint32 TreeID, ENeighbourDirection 
 }
 
 std::vector<uint32> ACPathVolume::FindNeighbourLeafs(uint32 TreeID, bool MustBeFree)
-{
+{//현재 TreeID의 이웃 leaf노드 vector리턴
 	std::vector<uint32> FreeNeighbours;
 
 	for (int Direction = 0; Direction < 6; Direction++)
-	{
+	{//front,back,left,right,top,bottom 6방향
 		uint32 NeighbourID = 0;
 		CPathOctree* Neighbour = FindNeighbourByID(TreeID, (ENeighbourDirection)Direction, NeighbourID);
 		if (Neighbour)
 		{
-			if (Neighbour->GetIsFree())
+			if (Neighbour->GetIsFree())//빈 노드인 경우
 				FreeNeighbours.push_back(NeighbourID);
 			else if (Neighbour->Children)
-			{
+			{//빈노드는 아니지만 자식 중에 빈노드가 존재한다면 push
 				FindLeafsOnSide(Neighbour, NeighbourID, (ENeighbourDirection)LookupTable_OppositeSide[Direction], &FreeNeighbours, MustBeFree);
 			}
 			else if(!MustBeFree)
@@ -1142,6 +1142,10 @@ void ACPathVolume::InitialGenerationUpdate()
 			TotalNodeCount += OctreeCountAtDepth[Depth];
 		}
 
+		if (GenerationCompleteDelegate.IsBound())
+		{//voxel생성후 수행하게되는 delegate존재시 호출
+			GenerationCompleteDelegate.Execute();
+		}
 
 		CleanFinishedGenerators();
 		GetWorld()->GetTimerManager().ClearTimer(GenerationTimerHandle);

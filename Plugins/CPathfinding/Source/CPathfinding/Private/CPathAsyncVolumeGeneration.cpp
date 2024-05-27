@@ -6,6 +6,7 @@
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Templates/Function.h"
 #include "Engine/World.h"
+#include "CPathCore.h"
 #include <thread>
 
 FCPathAsyncVolumeGenerator::FCPathAsyncVolumeGenerator(ACPathVolume* Volume, uint32 StartIndex, uint32 EndIndex, uint8 ThreadID, FString ThreadName, bool Obstacles)
@@ -62,7 +63,7 @@ uint32 FCPathAsyncVolumeGenerator::Run()
 	if (LastIndex > 0)
 	{
 		if (bObstacles)
-		{
+		{//동적 장애물이 있는 경우(일부 voxel만 업데이트)
 			auto StartIter = VolumeRef->TreesToRegenerate.begin();
 			for (uint32 i = 0; i < FirstIndex; i++)
 				StartIter++;
@@ -77,9 +78,9 @@ uint32 FCPathAsyncVolumeGenerator::Run()
 			}
 		}
 		else
-		{
+		{//초기 생성의 경우(전부 업데이트)
 			for (uint32 OuterIndex = FirstIndex; OuterIndex < LastIndex && !RequestedKill.load(); OuterIndex++)
-			{
+			{//OuterIndex: 초기 생성되는 x,y,z축 복셀의 곱 인덱스
 				RefreshTree(OuterIndex);
 			}
 		}
@@ -147,14 +148,17 @@ bool FCPathAsyncVolumeGenerator::RefreshTreeRec(CPathOctree* OctreeRef, uint32 D
 
 	OctreeCountAtDepth[Depth]++;
 
+	//분석: RecheckOctreeAtDepth함수가 해당 octree노드가 free인지에 대한 정보를 저장해줌
+	//      자식이 없는 노드는 leaf노드로 시각화될수 있음
+
 	if (IsFree)
-	{
+	{//빈 공간일때(자식이 존재하지 않음)
 		delete[] OctreeRef->Children;
 		OctreeRef->Children = nullptr;
 		return true;
 	}
 	else if (++Depth <= (uint32)VolumeRef->OctreeDepth)
-	{
+	{//primitive가 존재해서 Octree분기, depth가 한계 depth보다 작을때만 분기
 		float HalfSize = VolumeRef->GetVoxelSizeByDepth(Depth) / 2.f;
 
 		if (!OctreeRef->Children)
@@ -162,7 +166,7 @@ bool FCPathAsyncVolumeGenerator::RefreshTreeRec(CPathOctree* OctreeRef, uint32 D
 		uint8 FreeChildren = 0;
 		// Checking children
 		for (uint32 ChildIndex = 0; ChildIndex < 8; ChildIndex++)
-		{
+		{//8개의 자식 분기
 			FVector Location = TreeLocation + VolumeRef->LookupTable_ChildPositionOffsetMaskByIndex[ChildIndex] * HalfSize;
 			FreeChildren += RefreshTreeRec(&OctreeRef->Children[ChildIndex], Depth, Location);
 		}
@@ -172,7 +176,7 @@ bool FCPathAsyncVolumeGenerator::RefreshTreeRec(CPathOctree* OctreeRef, uint32 D
 			return true;
 		}
 		else
-		{
+		{//자식중에 free인 자식이 하나도 없을때
 			delete[] OctreeRef->Children;
 			OctreeRef->Children = nullptr;
 			return false;

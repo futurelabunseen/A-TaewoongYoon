@@ -3,6 +3,8 @@
 
 #include "CPathVolumeHermes.h"
 #include "CPathFindPath.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMeshActor.h"
 
 int ACPathVolumeHermes::GetVoxelType(const FVector& WorldLocation)
 {
@@ -28,7 +30,9 @@ int ACPathVolumeHermes::GetVoxelType(const FVector& WorldLocation)
 
 void ACPathVolumeHermes::BeginPlay()
 {
-	Super::BeginPlay();
+	//voxel octree를 순회하며 3D 미니맵을 구성하는 static mesh스폰하는 함수 등록
+	GenerationCompleteDelegate.BindUObject(this , &ACPathVolumeHermes::SpawnMinimapVoxel);
+	Super::BeginPlay();//volume안에 voxel들 생성
 }
 
 void ACPathVolumeHermes::CalcFitness(CPathAStarNode& Node , FVector TargetLocation , int32 UserData)
@@ -51,7 +55,7 @@ bool ACPathVolumeHermes::RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector T
 	bool IsFree = Super::RecheckOctreeAtDepth(OctreeRef, TreeLocation, Depth);
 	if (IsFree)
 	{
-		float TraceAmount = VoxelSize * 3.f;
+		float TraceAmount = VoxelSize * 1.49f;
 		{//벽 판단
 			bool IsWall1 = GetWorld()->LineTraceTestByChannel(TreeLocation , FVector(TreeLocation.X , TreeLocation.Y - TraceAmount , TreeLocation.Z) , TraceChannel);
 			bool IsWall2 = GetWorld()->LineTraceTestByChannel(TreeLocation , FVector(TreeLocation.X , TreeLocation.Y + TraceAmount , TreeLocation.Z) , TraceChannel);
@@ -76,5 +80,47 @@ bool ACPathVolumeHermes::RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector T
 		bool IsGround = GetWorld()->LineTraceTestByChannel(TreeLocation, FVector(TreeLocation.X, TreeLocation.Y, TreeLocation.Z- TraceAmount), TraceChannel);
 		OctreeRef->SetIsGround(IsGround);
 	}
+	
 	return IsFree;
+}
+
+void ACPathVolumeHermes::SpawnMinimapVoxel()
+{
+	//    0. Voxel 멀티쓰레드 생성작업 wait(delegate를 이용해서 대기)
+	//    1. Octree포인터 Get(this->Octrees)
+	//    2. OuterIndex loop돌기(NodeCount[3] 배열 이용)
+	//    3. 만약 해당 Octree가 벽이나 바닥일시 SpawnMinimapStaticMesh호출
+	uint32 OuterNodeCount = NodeCount[0] * NodeCount[1] * NodeCount[2];//OuterNodeCount: 0depth인 voxel의 개수
+	for ( uint32 i = 0; i < OuterNodeCount; i++ )
+	{
+		CPathOctree* Octree = &Octrees[i];
+		if ( Octree->GetIsGround() || Octree->GetIsWall() )
+		{
+			FVector VoxelLocation = WorldLocationFromTreeID(i);
+			SpawnMinimapStaticMesh(VoxelLocation , GetActorRotation());
+		}
+	}
+}
+
+void ACPathVolumeHermes::SpawnMinimapStaticMesh(FVector Location,FRotator Rotation)
+{
+	ensure(MinimapVoxelMesh);
+	 //StaticMesh액터 스폰
+    AStaticMeshActor* NewMeshActor = GetWorld()->SpawnActor<AStaticMeshActor>(
+		AStaticMeshActor::StaticClass(), Location, Rotation);
+
+
+
+    //StaticMesh적용
+    if (NewMeshActor)
+    {
+        UStaticMeshComponent* MeshComponent = NewMeshActor->GetStaticMeshComponent();
+        if (MeshComponent)
+        {
+			MeshComponent->SetMobility(EComponentMobility::Movable);
+			MeshComponent->SetWorldScale3D(FVector(VoxelSize / 100.0f));//VoxelSize에 맞게 스케일 적용
+            MeshComponent->SetStaticMesh(MinimapVoxelMesh);
+			MeshComponent->SetMobility(EComponentMobility::Static);
+        }
+    }
 }

@@ -38,5 +38,13 @@ public:
 	{
 		return TreeUserData & 0x00000002;
 	}
+private:
+	void SpawnMinimapVoxel();
 
+	//(Location,Rotation)에 StaticMesh스폰
+	void SpawnMinimapStaticMesh(FVector Location,FRotator Rotation);
+
+private:
+	UPROPERTY(EditAnywhere,Category = "Minimap")
+	TObjectPtr<UStaticMesh> MinimapVoxelMesh;
 };

@@ -49,7 +49,6 @@ void CPathAStar::DeleteInstance(UWorld* World)
 
 ECPathfindingFailReason CPathAStar::FindPath(ACPathVolume* VolumeRef, FCPathResult* Result, FVector Start, FVector End, uint32 SmoothingPasses, int32 UserData, float TimeLimit, bool RequestRawPath, bool RequestUserPath)
 {
-	
 	bStop = false;
 
 #if WITH_EDITOR

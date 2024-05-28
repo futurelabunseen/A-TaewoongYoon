@@ -132,40 +132,40 @@ ECPathfindingFailReason CPathAStar::FindPath(ACPathVolume* VolumeRef, FCPathResu
 				NewTreeNode.WorldLocation = VolumeRef->WorldLocationFromTreeID(NewTreeNode.TreeID);
 				
 				if ( NewTreeNode.WorldLocation.Z > CurrentNode.WorldLocation.Z )
-				{//고도 상승 예외처리
-					bool IsPassable = ExtractIsWallFromData(NewTreeNode.TreeUserData) || 
-						(!ExtractIsWallFromData(NewTreeNode.TreeUserData) && ExtractIsWallFromData(CurrentNode.TreeUserData));
+				{//고도 상승 예외처리(고도가 상승할수 있는 경우는 벽을타고 올라가는 경우뿐)
+					bool IsPassable = ExtractIsWallFromData(NewTreeNode.TreeUserData);
 					if ( !IsPassable )
 						continue;
 				}
-				else if ( NewTreeNode.WorldLocation.Z <= CurrentNode.WorldLocation.Z )
-				{//고도 하강 예외처리
-					bool IsGliding = !ExtractIsGroundFromData(NewTreeNode.TreeUserData) && !ExtractIsWallFromData(NewTreeNode.TreeUserData);
-					if ( IsGliding )
-					{
-						if ( CurrentNode.GlidingStartLocation.IsNearlyZero() )
-						{
-							NewTreeNode.GlidingStartLocation = CurrentNode.WorldLocation;
-						}
-						else
-						{
-							NewTreeNode.GlidingStartLocation = CurrentNode.GlidingStartLocation;
-							FVector currentPositionToGlidingStart = NewTreeNode.GlidingStartLocation - CurrentNode.WorldLocation;
-							//UE_LOG(LogTemp , Log , TEXT("%f %f %f") , currentPositionToGlidingStart.X , currentPositionToGlidingStart.Y ,currentPositionToGlidingStart.Z);
-							float gradient = FMath::Sqrt(FMath::Pow(currentPositionToGlidingStart.X , 2) + FMath::Pow(currentPositionToGlidingStart.Y , 2))
-								/ currentPositionToGlidingStart.Z;
-							//UE_LOG(LogTemp , Log , TEXT("%f %f %f") , NewTreeNode.GlidingStartLocation.X , NewTreeNode.GlidingStartLocation.Y , NewTreeNode.GlidingStartLocation.Z);
-							if ( gradient > 0.4f )
-								continue;
-						}
-
-
-					}
-					else
-					{
-						NewTreeNode.GlidingStartLocation = FVector::ZeroVector;
-					}
+				//new 알고리즘
+				// 1. 새로운 복셀 노드가 '땅'이나 '벽'일시  
+				
+				if( CurrentNode.GlidingStartLocation.IsNearlyZero() )
+				{
+					NewTreeNode.GlidingStartLocation = CurrentNode.WorldLocation;
 				}
+				else
+				{
+					NewTreeNode.GlidingStartLocation = CurrentNode.GlidingStartLocation;
+				}
+				if ( ExtractIsGroundFromData(NewTreeNode.TreeUserData) || ExtractIsWallFromData(NewTreeNode.TreeUserData) &&
+					ExtractIsGroundFromData(CurrentNode.TreeUserData) || ExtractIsWallFromData(CurrentNode.TreeUserData))
+				{
+					NewTreeNode.GlidingStartLocation = NewTreeNode.WorldLocation;
+				}
+				if ( NewTreeNode.WorldLocation.Z <= CurrentNode.WorldLocation.Z )
+				{//고도가 하강할시
+					FVector worldPositionToGlidingStart = NewTreeNode.GlidingStartLocation - NewTreeNode.WorldLocation;
+					float gradient = FMath::Sqrt(FMath::Pow(worldPositionToGlidingStart.X , 2) + FMath::Pow(worldPositionToGlidingStart.Y , 2))
+						/ FMath::Abs(worldPositionToGlidingStart.Z+0.001f);
+					//UE_LOG(LogTemp , Log , TEXT("%f %f %f") , NewTreeNode.GlidingStartLocation.X , NewTreeNode.GlidingStartLocation.Y , NewTreeNode.GlidingStartLocation.Z);
+					//UE_LOG(LogTemp , Log , TEXT("%f %f %f") , worldPositionToGlidingStart.X , worldPositionToGlidingStart.Y , worldPositionToGlidingStart.Z);
+					if ( gradient > 0.6f )//gradient: x증분/z증분
+						continue;
+					
+					
+				}
+
 				// CalcFitness(NewNode); - this is inline and not virtual so in theory faster, but not extendable.
 				// Also from my testing, the speed difference between the two was unnoticeable at 150000 nodes processed.
 

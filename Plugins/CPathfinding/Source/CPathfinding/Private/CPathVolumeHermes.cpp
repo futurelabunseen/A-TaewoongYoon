@@ -55,7 +55,11 @@ void ACPathVolumeHermes::CalcFitness(CPathAStarNode& Node , FVector TargetLocati
 	
 	if (ExtractIsGroundFromData(Node.TreeUserData))
 	{
-		Node.DistanceSoFar += 700;
+		Node.DistanceSoFar += 1000;
+	}
+	if (ExtractIsWallFromData(Node.TreeUserData))
+	{
+		Node.DistanceSoFar += 10;
 	}
 	
 	Node.FitnessResult = Node.DistanceSoFar + 3.5f * FVector::Distance(Node.WorldLocation, TargetLocation);//FitnessResult: A*평가값, 낮을수록 우선순위
@@ -75,16 +79,16 @@ bool ACPathVolumeHermes::RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector T
 			bool IsWall = IsWall1 || IsWall2 || IsWall3 || IsWall4;
 			OctreeRef->SetIsWall(IsWall);
 
-			//if ( !IsWall )
-			//{//벽은 아니지만 대각선 아래방향에 벽이 존재하는 경우 -> 벽으로 취급
-			//	bool IsExtraWall1 = GetWorld()->LineTraceTestByChannel(TreeLocation , FVector(TreeLocation.X , TreeLocation.Y - TraceAmount , TreeLocation.Z-TraceAmount) , TraceChannel);
-			//	bool IsExtraWall2 = GetWorld()->LineTraceTestByChannel(TreeLocation , FVector(TreeLocation.X , TreeLocation.Y + TraceAmount , TreeLocation.Z-TraceAmount) , TraceChannel);
-			//	bool IsExtraWall3 = GetWorld()->LineTraceTestByChannel(TreeLocation , FVector(TreeLocation.X - TraceAmount , TreeLocation.Y , TreeLocation.Z-TraceAmount) , TraceChannel);
-			//	bool IsExtraWall4 = GetWorld()->LineTraceTestByChannel(TreeLocation , FVector(TreeLocation.X + TraceAmount , TreeLocation.Y , TreeLocation.Z-TraceAmount) , TraceChannel);
-			//	bool IsGround = GetWorld()->LineTraceTestByChannel(TreeLocation, FVector(TreeLocation.X, TreeLocation.Y, TreeLocation.Z- TraceAmount), TraceChannel);
-			//	bool IsExtraWall = (IsExtraWall1 || IsExtraWall2 || IsExtraWall3 || IsExtraWall4) && !IsGround;
-			//	OctreeRef->SetIsWall(IsExtraWall);
-			//}
+			if ( !IsWall )
+			{//벽은 아니지만 대각선 아래방향에 벽이 존재하는 경우 -> 벽으로 취급
+				bool IsExtraWall1 = GetWorld()->LineTraceTestByChannel(TreeLocation , FVector(TreeLocation.X , TreeLocation.Y - TraceAmount , TreeLocation.Z-TraceAmount) , TraceChannel);
+				bool IsExtraWall2 = GetWorld()->LineTraceTestByChannel(TreeLocation , FVector(TreeLocation.X , TreeLocation.Y + TraceAmount , TreeLocation.Z-TraceAmount) , TraceChannel);
+				bool IsExtraWall3 = GetWorld()->LineTraceTestByChannel(TreeLocation , FVector(TreeLocation.X - TraceAmount , TreeLocation.Y , TreeLocation.Z-TraceAmount) , TraceChannel);
+				bool IsExtraWall4 = GetWorld()->LineTraceTestByChannel(TreeLocation , FVector(TreeLocation.X + TraceAmount , TreeLocation.Y , TreeLocation.Z-TraceAmount) , TraceChannel);
+				bool IsGround = GetWorld()->LineTraceTestByChannel(TreeLocation, FVector(TreeLocation.X, TreeLocation.Y, TreeLocation.Z- TraceAmount), TraceChannel);
+				bool IsExtraWall = (IsExtraWall1 || IsExtraWall2 || IsExtraWall3 || IsExtraWall4) && !IsGround;
+				OctreeRef->SetIsWall(IsExtraWall);
+			}
 		}
 
 		//땅 판단

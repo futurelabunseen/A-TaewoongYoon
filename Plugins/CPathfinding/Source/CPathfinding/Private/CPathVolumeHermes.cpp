@@ -55,11 +55,11 @@ void ACPathVolumeHermes::CalcFitness(CPathAStarNode& Node , FVector TargetLocati
 	
 	if (ExtractIsGroundFromData(Node.TreeUserData))
 	{
-		Node.DistanceSoFar += 1000;
+		Node.DistanceSoFar += 180;
 	}
 	if (ExtractIsWallFromData(Node.TreeUserData))
 	{
-		Node.DistanceSoFar += 10;
+		Node.DistanceSoFar += 100;
 	}
 	
 	Node.FitnessResult = Node.DistanceSoFar + 3.5f * FVector::Distance(Node.WorldLocation, TargetLocation);//FitnessResult: A*평가값, 낮을수록 우선순위
@@ -70,7 +70,7 @@ bool ACPathVolumeHermes::RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector T
 	bool IsFree = Super::RecheckOctreeAtDepth(OctreeRef, TreeLocation, Depth);
 	if (IsFree)
 	{
-		float TraceAmount = VoxelSize * 1.49f;
+		float TraceAmount = VoxelSize * 1.49f;//VoxelSize: 최소복셀 크기
 		{//벽 판단
 			bool IsWall1 = GetWorld()->LineTraceTestByChannel(TreeLocation , FVector(TreeLocation.X , TreeLocation.Y - TraceAmount , TreeLocation.Z) , TraceChannel);
 			bool IsWall2 = GetWorld()->LineTraceTestByChannel(TreeLocation , FVector(TreeLocation.X , TreeLocation.Y + TraceAmount , TreeLocation.Z) , TraceChannel);
@@ -134,7 +134,7 @@ void ACPathVolumeHermes::SpawnMinimapVoxel()
 	uint32 OuterNodeCount = NodeCount[0] * NodeCount[1] * NodeCount[2];//OuterNodeCount: 0depth인 voxel의 개수
 	ensure(MinimapVoxelMesh);
 	HISMComponent->SetStaticMesh(MinimapVoxelMesh);
-	HISMComponent->SetMaterial(0, MinimapVoxelMesh->GetMaterial(0));
+	HISMComponent->SetMaterial(0, MinimapMaterial);
 	for (uint32 i = 0; i < OuterNodeCount; i++) 
 	{
 		FTransform InstanceTransform;

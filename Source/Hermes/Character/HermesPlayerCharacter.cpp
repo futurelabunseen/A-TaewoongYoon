@@ -177,6 +177,8 @@ void AHermesPlayerCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	int32 InputId = 1;
 	for (const auto& StartAbility : StartActivatableAbilities)

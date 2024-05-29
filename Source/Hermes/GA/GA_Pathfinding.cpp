@@ -68,7 +68,7 @@ void UGA_Pathfinding::ActivateAbility(const FGameplayAbilitySpecHandle Handle , 
 		SplineMeshComponent->SetMobility(EComponentMobility::Movable);
 		SplineMeshComponent->SetStaticMesh(SplineStaticMesh);
 		SplineMeshComponent->SetMaterial(0,AirRouteMaterial);
-		SplineMeshComponent->SetForwardAxis(ESplineMeshAxis::Z);
+		SplineMeshComponent->SetForwardAxis(ESplineMeshAxis::Y);
 		SplineMeshComponent->SetStartScale(FVector2D(SplineTickness,SplineTickness));
 		SplineMeshComponent->SetEndScale(FVector2D(SplineTickness,SplineTickness));
 		SplineMeshComponent->RegisterComponent();
@@ -111,11 +111,14 @@ void UGA_Pathfinding::UpdatePath(const TArray<FVector>& PathPoints)
 		{//Spline구역 Loop
 			FVector splineStartPointLocation(FVector::Zero());
 			FVector splineStartPointTangent(FVector::Zero());
-			SplineComponent->GetLocationAndTangentAtSplinePoint(i,splineStartPointLocation,splineStartPointTangent,ESplineCoordinateSpace::World);
+			SplineComponent->GetLocationAndTangentAtSplinePoint(i,splineStartPointLocation,splineStartPointTangent,ESplineCoordinateSpace::Local);
+
 
 			FVector splineEndPointLocation(FVector::Zero());
 			FVector splineEndPointTangent(FVector::Zero());
-			SplineComponent->GetLocationAndTangentAtSplinePoint(i+1,splineEndPointLocation,splineEndPointTangent,ESplineCoordinateSpace::World);
+			SplineComponent->GetLocationAndTangentAtSplinePoint(i+1,splineEndPointLocation,splineEndPointTangent,ESplineCoordinateSpace::Local);
+
+			
 
 			SplineMeshComponents[i]->SetStartAndEnd(
 				splineStartPointLocation,

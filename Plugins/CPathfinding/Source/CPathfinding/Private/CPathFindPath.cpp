@@ -160,7 +160,7 @@ ECPathfindingFailReason CPathAStar::FindPath(ACPathVolume* VolumeRef, FCPathResu
 						/ FMath::Abs(worldPositionToGlidingStart.Z+0.001f);
 					//UE_LOG(LogTemp , Log , TEXT("%f %f %f") , NewTreeNode.GlidingStartLocation.X , NewTreeNode.GlidingStartLocation.Y , NewTreeNode.GlidingStartLocation.Z);
 					//UE_LOG(LogTemp , Log , TEXT("%f %f %f") , worldPositionToGlidingStart.X , worldPositionToGlidingStart.Y , worldPositionToGlidingStart.Z);
-					if ( gradient > 0.6f )//gradient: x증분/z증분
+					if ( gradient > 1.4f )//gradient: x증분/z증분
 						continue;
 					
 					

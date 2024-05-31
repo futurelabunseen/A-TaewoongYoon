@@ -46,12 +46,20 @@ private:
 	UFUNCTION()
 	void SpawnMinimapVoxel();
 	
+	UFUNCTION()
+	void BakeVoxel();
+	bool LoadVoxel();
+
 
 
 private:
+	UPROPERTY(EditAnywhere,Category = "CPath")
+	bool bUsingBakedData = true;
 
 	UPROPERTY()
 	TObjectPtr<class UHierarchicalInstancedStaticMeshComponent> HISMComponent;
+
+
 
 	UPROPERTY(EditAnywhere,Category = "Minimap")
 	TObjectPtr<UStaticMesh> MinimapVoxelMesh;

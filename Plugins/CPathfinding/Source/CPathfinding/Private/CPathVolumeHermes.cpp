@@ -10,6 +10,10 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "HAL/PlatformFilemanager.h"
+#include "Misc/Paths.h"
+#include "Kismet/GameplayStatics.h"
+
 
 ACPathVolumeHermes::ACPathVolumeHermes()
 {
@@ -40,10 +44,24 @@ int ACPathVolumeHermes::GetVoxelType(const FVector& WorldLocation)
 
 void ACPathVolumeHermes::BeginPlay()
 {
+	Super::BeginPlay();
 	//voxel octree를 순회하며 3D 미니맵을 구성하는 static mesh스폰하는 함수 등록
 	GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::SpawnMinimapVoxel);
 	GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::SpawnMinimapCamera);
-	Super::BeginPlay();//volume안에 voxel들 생성
+
+	if ( bUsingBakedData )
+	{//baking된 복셀데이터가 있다면 loading,없다면 복셀 생성후 복셀데이터 baking
+		if ( !LoadVoxel() )
+		{
+			GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::BakeVoxel);
+			GenerateGraph();
+			
+		}
+	}
+	else
+	{
+		GenerateGraph();
+	}
 }
 
 void ACPathVolumeHermes::CalcFitness(CPathAStarNode& Node , FVector TargetLocation , int32 UserData)
@@ -108,6 +126,7 @@ void ACPathVolumeHermes::SpawnMinimapCamera()
 		GetActorLocation() + FVector(VolumeBox->GetScaledBoxExtent().X,0,-VolumeBox->GetScaledBoxExtent().Z) ,
 		FRotator(-45,-180,0)
 	);
+	MinimapSceneCapture2D->SetActorLocation(MinimapSceneCapture2D->GetActorLocation() + MinimapSceneCapture2D->GetActorForwardVector() * 5000.f);
 	if ( MinimapSceneCapture2D )
 	{
 		// Access the SceneCaptureComponent2D
@@ -149,5 +168,100 @@ void ACPathVolumeHermes::SpawnMinimapVoxel()
 		}
 	}
 
+
+}
+
+void ACPathVolumeHermes::BakeVoxel()
+{
+	FString DirectoryPath = FPaths::ProjectDir() + TEXT("BakedData/");
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+    
+    if (!PlatformFile.DirectoryExists(*DirectoryPath))
+    {//BakedData디렉토리가 없다면
+        PlatformFile.CreateDirectory(*DirectoryPath);//생성
+
+        if (!PlatformFile.DirectoryExists(*DirectoryPath))
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to create directory: %s"), *DirectoryPath);
+            return;
+        }
+    }
+
+	FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
+	FString FilePath = FPaths::ProjectDir() + TEXT("BakedData/") + CurrentLevelName + TEXT(".txt");
+    FString DataString;
+
+
+	DataString.Append(FString::FromInt(NodeCount[0]) + TEXT("\n"));
+	DataString.Append(FString::FromInt(NodeCount[1]) + TEXT("\n"));
+	DataString.Append(FString::FromInt(NodeCount[2]) + TEXT("\n"));
+	uint32 OuterNodeCount = NodeCount[0] * NodeCount[1] * NodeCount[2];
+    for (uint32 i = 0u;i<OuterNodeCount;i++)
+    {
+        DataString.Append(FString::Printf(TEXT("%u"),Octrees[i].Data) + TEXT("\n"));
+    }
+
+    FFileHelper::SaveStringToFile(DataString, *FilePath);
+
+}
+
+bool ACPathVolumeHermes::LoadVoxel()
+{
+	FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
+	FString FilePath = FPaths::ProjectDir() + TEXT("BakedData/") + CurrentLevelName + TEXT(".txt");
+    FString DataString;
+	
+
+	if ( FFileHelper::LoadFileToString(DataString , *FilePath) )
+	{
+		TArray<FString> DataLines;
+		DataString.ParseIntoArrayLines(DataLines);
+
+		for ( int32 i = 0; i < 3; i++ )
+		{//x,y,z 복셀개수 load
+			NodeCount[i] = FCString::Atoi(*DataLines[i]);
+		}
+		uint32 OuterNodeCount = NodeCount[0] * NodeCount[1] * NodeCount[2];
+		Octrees = new CPathOctree[OuterNodeCount];
+		for ( int32 i = 3; i < DataLines.Num(); i++ )
+		{
+			Octrees[i - 3].Data = static_cast<uint32>(FCString::Strtoui64(*DataLines[i] , nullptr , 10));
+			Octrees[i - 3].Children = nullptr;
+		}
+		StartPosition = GetActorLocation() - VolumeBox->GetScaledBoxExtent() + GetVoxelSizeByDepth(0) / 2;
+		for (int i = 0; i <= OctreeDepth; i++)
+		{
+			LookupTable_VoxelSizeByDepth[i] = VoxelSize * FMath::Pow(2.f, OctreeDepth - i);
+			TraceShapesByDepth.emplace_back();
+			TraceShapesByDepth.back().push_back(FCollisionShape::MakeBox(FVector(GetVoxelSizeByDepth(i) / 2.f)));
+
+			float CurrSize = GetVoxelSizeByDepth(i);
+			if (AgentRadius * 2 > CurrSize || AgentHalfHeight * 2 > CurrSize)
+			{
+				switch (AgentShape)
+				{
+				case Capsule:
+					TraceShapesByDepth.back().push_back(FCollisionShape::MakeCapsule(AgentRadius, AgentHalfHeight));
+				case Box:
+					TraceShapesByDepth.back().push_back(FCollisionShape::MakeBox(FVector(AgentRadius, AgentRadius, AgentHalfHeight)));
+				case Sphere:
+					TraceShapesByDepth.back().push_back(FCollisionShape::MakeSphere(AgentRadius));
+				default:
+					break;
+				}
+			}
+		}
+		GeneratorsRunning.store(0);
+		InitialGenerationCompleteAtom.store(true);
+		InitialGenerationFinished = true;
+		if (GenerationCompleteDelegate.IsBound())
+		{//voxel생성후 수행하게되는 delegate존재시 호출
+			GenerationCompleteDelegate.Broadcast();
+		}
+		return true;
+	}
+	else
+		return false;
 
 }

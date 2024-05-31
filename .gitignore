@@ -1,6 +1,11 @@
+#baked data
+BakedData/
+
 # Unreal Asset
 Content/Gothic_Cathedral/
 Content/Maps/Main.umap
+
+
 
 # Visual Studio 2015 user specific files
 .vs/

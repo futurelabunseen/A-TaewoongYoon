@@ -127,11 +127,6 @@ public:
 		int OctreeDepth = 2;
 
 
-	// If want to call Generate() later or with some condition.
-	// Note that volume wont be usable before it is generated
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CPath")
-		bool GenerateOnBeginPlay = true;
-
 	// Set a custom generation thread limit. By default, it's system's Physical Core count - 1.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CPath")
 		bool OverwriteMaxGenerationThreads = false;

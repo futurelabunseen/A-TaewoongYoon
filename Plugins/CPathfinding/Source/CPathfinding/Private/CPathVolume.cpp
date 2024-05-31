@@ -221,8 +221,6 @@ void ACPathVolume::BeginPlay()
 	}
 	CoreInstance = ACPathCore::GetInstance(GetWorld());
 
-	if (GenerateOnBeginPlay)
-		GenerateGraph();
 }
 
 bool ACPathVolume::GenerateGraph()
@@ -242,7 +240,6 @@ bool ACPathVolume::GenerateGraph()
 
 	checkf(OctreeDepth <= MAX_DEPTH && OctreeDepth >= 0, TEXT("CPATH - Graph Generation:::OctreeDepth must be within 0 and MAX_DEPTH"));
 	//checkf(AgentShape == ECollisionShapeType::Capsule || AgentShape == ECollisionShapeType::Sphere || AgentShape == ECollisionShapeType::Box, TEXT("CPATH - Graph Generation:::Agent shape must be Capsule, Sphere or Box"));
-
 
 	for (int i = 0; i <= OctreeDepth; i++)
 	{//OctreeDepth의 의미: 기본 VoxelSize만큼 복셀생성하고 세부적으로 몇 Depth를 더 생성할지
@@ -540,7 +537,7 @@ inline FVector ACPathVolume::WorldLocationFromTreeID(uint32 TreeID) const
 	uint32 Depth = ExtractDepth(TreeID);
 
 	FVector CurrPosition = StartPosition + GetVoxelSizeByDepth(0) * LocalCoordsInt3FromOuterIndex(OuterIndex);
-
+	
 	for (uint32 CurrDepth = 1; CurrDepth <= Depth; CurrDepth++)
 	{
 		CurrPosition += GetVoxelSizeByDepth(CurrDepth) * 0.5f * LookupTable_ChildPositionOffsetMaskByIndex[ExtractChildIndex(TreeID, CurrDepth)];

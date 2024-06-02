@@ -19,6 +19,8 @@ public:
 	int GetVoxelType(const FVector& WorldLocation);
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
+
 
 	// ------- EXTENDABLE ------
 
@@ -53,6 +55,9 @@ private:
 
 
 private:
+
+	TObjectPtr<class USpringArmComponent> SpringArm;
+
 	UPROPERTY(EditAnywhere,Category = "CPath")
 	bool bUsingBakedData = true;
 

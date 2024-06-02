@@ -13,11 +13,15 @@
 #include "HAL/PlatformFilemanager.h"
 #include "Misc/Paths.h"
 #include "Kismet/GameplayStatics.h"
-
+#include "GameFramework/SpringArmComponent.h"
 
 ACPathVolumeHermes::ACPathVolumeHermes()
 {
 	HISMComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HISMComponent"));
+
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	SpringArm->SetupAttachment(RootComponent);
+    SpringArm->TargetArmLength = 2500.0f; // 원하는 거리 설정
 }
 
 int ACPathVolumeHermes::GetVoxelType(const FVector& WorldLocation)
@@ -62,6 +66,18 @@ void ACPathVolumeHermes::BeginPlay()
 	{
 		GenerateGraph();
 	}
+}
+
+void ACPathVolumeHermes::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+    if (PlayerController)
+    {
+        FRotator PlayerControlRotation = PlayerController->GetControlRotation();
+		SpringArm->SetWorldLocation(FVector(0, 0, -VolumeBox->GetScaledBoxExtent().Z * 2.0f) + PlayerController->GetPawn()->GetActorLocation()); 
+        SpringArm->SetWorldRotation(PlayerControlRotation);
+    }
 }
 
 void ACPathVolumeHermes::CalcFitness(CPathAStarNode& Node , FVector TargetLocation , int32 UserData)
@@ -121,12 +137,11 @@ void ACPathVolumeHermes::SpawnMinimapCamera()
 {
 	check(MinimapRenderTarget);
 	
-	ASceneCapture2D* MinimapSceneCapture2D = GetWorld()->SpawnActor<ASceneCapture2D>(
-		ASceneCapture2D::StaticClass(),
-		GetActorLocation() + FVector(VolumeBox->GetScaledBoxExtent().X,0,-VolumeBox->GetScaledBoxExtent().Z) ,
-		FRotator(-45,-180,0)
-	);
-	MinimapSceneCapture2D->SetActorLocation(MinimapSceneCapture2D->GetActorLocation() + MinimapSceneCapture2D->GetActorForwardVector() * 5000.f);
+	
+
+	ASceneCapture2D* MinimapSceneCapture2D = GetWorld()->SpawnActor<ASceneCapture2D>(ASceneCapture2D::StaticClass());
+	MinimapSceneCapture2D->AttachToComponent(SpringArm, FAttachmentTransformRules::KeepRelativeTransform);
+	
 	if ( MinimapSceneCapture2D )
 	{
 		// Access the SceneCaptureComponent2D

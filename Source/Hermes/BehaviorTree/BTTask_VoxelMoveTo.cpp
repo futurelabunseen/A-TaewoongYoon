@@ -5,6 +5,9 @@
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Character/HermesPlayerCharacter.h"
+#include "InputActionValue.h"
 
 UBTTask_VoxelMoveTo::UBTTask_VoxelMoveTo()
 {
@@ -32,7 +35,9 @@ EBTNodeResult::Type UBTTask_VoxelMoveTo::ExecuteTask(UBehaviorTreeComponent& Own
 	TaskMemory->PathResult = OverlappedPathVolume->FindPathSynchronous(Pawn->GetActorLocation() , TaskMemory->GoalLocation , 0 , 0 , 1.f);
 	TaskMemory->CurrentIndex = 0u;
 	
-	//toDO: 복셀기반 경로 검색 & 저장
+
+
+
 	return EBTNodeResult::InProgress;
 }
 
@@ -59,11 +64,11 @@ void UBTTask_VoxelMoveTo::TickTask(UBehaviorTreeComponent& OwnerComp , uint8* No
 	check(Pawn);
 	
 	
-	{//임시코드: CharacterMovement상태를 flying처리해서 중력영향받지 않게만듦
-		UCharacterMovementComponent* CharacterMovementComponent = CastChecked<UCharacterMovementComponent>(Pawn->GetMovementComponent());
-		CharacterMovementComponent->GravityScale = 0.f;
-		CharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Flying);
-	}
+	//{//임시코드: CharacterMovement상태를 flying처리해서 중력영향받지 않게만듦
+	//	UCharacterMovementComponent* CharacterMovementComponent = CastChecked<UCharacterMovementComponent>(Pawn->GetMovementComponent());
+	//	CharacterMovementComponent->GravityScale = 0.f;
+	//	CharacterMovementComponent->SetMovementMode(EMovementMode::MOVE_Flying);
+	//}
 
 	// 현재 index에서 다음 index 방향으로 이동,
 	//       이동완료시 index++
@@ -88,17 +93,19 @@ void UBTTask_VoxelMoveTo::MoveAlongPath(APawn* Pawn , const TArray<FCPathNode>& 
     FVector Direction = (TargetLocation - CurrentLocation).GetSafeNormal();
         
     float Distance = FVector::Dist(CurrentLocation,TargetLocation);
-    float MoveSpeed = 300.f; //속도
+    float Amount = 600.f;
 
-    if (Distance < MoveSpeed * DeltaSeconds)
+
+    if (Distance < Amount)
     {//목표 index 도달 판정
-        Pawn->SetActorLocation(TargetLocation);
+
         CurrentIndex++;
     }
     else
     {
-        FVector NewLocation = CurrentLocation + Direction * MoveSpeed * DeltaSeconds;
-        Pawn->SetActorLocation(NewLocation);
+		AHermesPlayerCharacter* HermesCharacter = Cast<AHermesPlayerCharacter>(Pawn);
+		HermesCharacter->Move(Direction);
+        
     }
     
 }

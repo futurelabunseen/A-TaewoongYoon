@@ -55,6 +55,9 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE class AController* GetAIController() const { return AIController; }
 	FORCEINLINE class AController* SetAIController(class AController* HermesAIController)  { return AIController = HermesAIController; }
+
+	
+	void Move(FVector Direction);
 public:
 	UPROPERTY()
 	TWeakObjectPtr<AHermesPlayerCharacter> PreviousCharacter;

@@ -406,6 +406,29 @@ void AHermesPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 	}
 }
 
+void AHermesPlayerCharacter::Move(FVector Direction)
+{//외부호출용 Move함수,(Direction벡터방향대로 이동)
+
+
+	FHitResult HitResult;
+	if ( FacingWallTrace(HitResult))
+	{
+		EnableClimbing(HitResult);
+	}
+	const FVector ActorUpDirection = GetActorUpVector();
+	const FVector ActorRightDirection = GetActorRightVector();
+	if ( bIsClimbing )
+	{
+		AddMovementInput(ActorRightDirection, ClimbingSpeed);
+		AddMovementInput(ActorUpDirection,ClimbingSpeed);
+	}
+	else
+	{
+		AddMovementInput(Direction, 1);
+	}
+}
+
+
 void AHermesPlayerCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
@@ -413,42 +436,43 @@ void AHermesPlayerCharacter::Move(const FInputActionValue& Value)
 
 	if ( bIsGliding )
 		MovementVector *= 2.f;
+	check(Controller);
 
-	if (Controller != nullptr)
+	FHitResult HitResult;
+	if ( FacingWallTrace(HitResult) &&  MovementVector.Y != 0)
 	{
-		FHitResult HitResult;
-		if ( FacingWallTrace(HitResult) &&  MovementVector.Y != 0)
-		{
-			EnableClimbing(HitResult);
-		}
-
-
-
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		const FVector ActorUpDirection = GetActorUpVector();
-		const FVector ActorRightDirection = GetActorRightVector();
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// add movement 
-		if ( bIsClimbing )
-		{
-			AddMovementInput(ActorRightDirection, MovementVector.X * ClimbingSpeed);
-			AddMovementInput(ActorUpDirection , MovementVector.Y * ClimbingSpeed);
-		}
-		else
-		{
-			AddMovementInput(RightDirection, MovementVector.X);
-			AddMovementInput(ForwardDirection, MovementVector.Y);
-		}
-		
+		EnableClimbing(HitResult);
 	}
+
+
+
+	// find out which way is forward
+	const FRotator Rotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+	// get forward vector
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	const FVector ActorUpDirection = GetActorUpVector();
+	const FVector ActorRightDirection = GetActorRightVector();
+	// get right vector 
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+	// add movement 
+	if ( bIsClimbing )
+	{
+		AddMovementInput(ActorRightDirection, MovementVector.X * ClimbingSpeed);
+		AddMovementInput(ActorUpDirection , MovementVector.Y * ClimbingSpeed);
+	}
+	else
+	{
+		AddMovementInput(RightDirection, MovementVector.X);
+		AddMovementInput(ForwardDirection, MovementVector.Y);
+	}
+		
+	
 }
+
+
 
 void AHermesPlayerCharacter::Look(const FInputActionValue& Value)
 {

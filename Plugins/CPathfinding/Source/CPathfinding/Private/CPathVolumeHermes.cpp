@@ -150,7 +150,8 @@ void ACPathVolumeHermes::SpawnMinimapCamera()
         {
             // Set the render target
             CaptureComponent->TextureTarget = MinimapRenderTarget;
-            CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+			
+			CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
             CaptureComponent->bCaptureEveryFrame = true;
 
 			// Disable shadows in the capture component

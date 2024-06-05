@@ -136,7 +136,7 @@ bool ACPathVolumeHermes::RecheckOctreeAtDepth(CPathOctree* OctreeRef , FVector T
 void ACPathVolumeHermes::SpawnMinimapCamera()
 {
 	check(MinimapRenderTarget);
-	
+	check(SceneCapturePostProcessMaterial);
 	
 
 	ASceneCapture2D* MinimapSceneCapture2D = GetWorld()->SpawnActor<ASceneCapture2D>(ASceneCapture2D::StaticClass());
@@ -154,8 +154,16 @@ void ACPathVolumeHermes::SpawnMinimapCamera()
 			CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
             CaptureComponent->bCaptureEveryFrame = true;
 
-			// Disable shadows in the capture component
-            CaptureComponent->ShowFlags.DynamicShadows = false;
+			CaptureComponent->PostProcessBlendWeight = 1.0f;
+
+			CaptureComponent->ShowFlags.SetAtmosphere(false); // 대기 중 안개 비활성화
+			CaptureComponent->ShowFlags.SetVolumetricFog(false); // 볼류메트릭 안개 비활성화
+			CaptureComponent->ShowFlags.SetDynamicShadows(false); // 동적 그림자 비활성화
+			//CaptureComponent->ShowFlags.DisableAdvancedFeatures();
+			//CaptureComponent->ShowFlags.SetPostProcessing(false);
+
+			CaptureComponent->PostProcessSettings.AddBlendable(SceneCapturePostProcessMaterial, 1.0f);
+			
         }
 	}
 }
@@ -183,7 +191,8 @@ void ACPathVolumeHermes::SpawnMinimapVoxel()
 			HISMComponent->AddInstance(InstanceTransform);
 		}
 	}
-
+	HISMComponent->SetRenderCustomDepth(true);
+    HISMComponent->CustomDepthStencilValue = 1;
 
 }
 

@@ -73,6 +73,10 @@ private:
 	TObjectPtr<UMaterialInterface> MinimapMaterial;
 
 
+	UPROPERTY(EditAnywhere,Category = "Minimap")
+	TObjectPtr<UMaterialInterface> SceneCapturePostProcessMaterial;
+
+
 	
 	UPROPERTY(EditAnywhere,Category = "Minimap")
     TObjectPtr<class UTextureRenderTarget2D> MinimapRenderTarget;

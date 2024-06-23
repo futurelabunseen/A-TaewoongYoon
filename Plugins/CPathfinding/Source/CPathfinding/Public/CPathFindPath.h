@@ -32,7 +32,17 @@ public:
 
 
 	// Can be called from main thread, but can freeze the game if you increase TimeLimit.
-	ECPathfindingFailReason FindPath(ACPathVolume* VolumeRef, FCPathResult* Result, FVector Start, FVector End, uint32 SmoothingPasses = 2, int32 UserData = 0, float TimeLimit = 0.15f, bool RequestRawPath = false, bool RequestUserPath = true);
+	ECPathfindingFailReason FindPath(
+		ACPathVolume* VolumeRef,
+		FCPathResult* Result,
+		FVector Start, 
+		FVector End,
+		uint32 SmoothingPasses = 2,
+		int32 UserData = 0,
+		float TimeLimit = 0.15f,
+		bool RequestRawPath = false,
+		bool RequestUserPath = true
+	);
 
 	// Set this to true to interrupt pathfinding. FindPath returns an empty array.
 	// This is set to false at the beginning of each FindPath call!
@@ -41,7 +51,8 @@ public:
 
 		// Used in removing nodes that lay on the same line. The biger the number, the more nodes will be removed, but the path potentially loses data.
 	float LineAngleToleranceDegrees = 3;
-
+	static bool UsingCimbingGliding;
+	static float GlidingGradient;
 
 
 protected:

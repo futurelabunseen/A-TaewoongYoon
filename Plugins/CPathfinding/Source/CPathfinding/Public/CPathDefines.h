@@ -6,10 +6,10 @@
 
 // TreeID settings
 // If you change these, you will also need to change some masks in functions like ReplaceDepth, ExtractDepth, etc
-#define DEPTH_0_BITS 21
+#define DEPTH_0_BITS 29
 #define DEPTH_0_LIMIT (uint32)1<<DEPTH_0_BITS
-#define DEPTH_0_MASK 0x001FFFFF
-#define DEPTH_MASK 0x00600000
+#define DEPTH_0_MASK 0x1FFFFFFF // 00011111111111111111111111111111
+#define DEPTH_MASK 0xC0000000   // 110000000
 #define MAX_DEPTH 3
 
 // Time measurement macros

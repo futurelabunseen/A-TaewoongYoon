@@ -41,7 +41,12 @@ public:
 	{
 		return TreeUserData & 0x00000002;
 	}
+
+protected:
+	UPROPERTY(BlueprintReadWrite)
+	TObjectPtr<class USpringArmComponent> SpringArm;
 private:
+
 	UFUNCTION()
 	void SpawnMinimapCamera();
 
@@ -55,11 +60,17 @@ private:
 
 
 private:
-
-	TObjectPtr<class USpringArmComponent> SpringArm;
+	
 
 	UPROPERTY(EditAnywhere,Category = "CPath")
 	bool bUsingBakedData = true;
+
+	UPROPERTY(EditAnywhere,Category = "CPath")
+	bool bUsingClimbingGliding = true;
+
+
+	UPROPERTY(EditAnywhere,Category = "CPath")
+	float GlidingGradient = 2.0f;
 
 	UPROPERTY()
 	TObjectPtr<class UHierarchicalInstancedStaticMeshComponent> HISMComponent;
@@ -77,7 +88,11 @@ private:
 	TObjectPtr<UMaterialInterface> SceneCapturePostProcessMaterial;
 
 
-	
+	UPROPERTY(EditAnywhere,Category = "Minimap")
+	TSubclassOf<AActor> MinimapPlayerActorClass;
+
+	TObjectPtr<AActor> MinimapPlayerActor;
+
 	UPROPERTY(EditAnywhere,Category = "Minimap")
     TObjectPtr<class UTextureRenderTarget2D> MinimapRenderTarget;
 

@@ -50,8 +50,10 @@ void ACPathVolumeHermes::BeginPlay()
 {
 	Super::BeginPlay();
 	//voxel octree를 순회하며 3D 미니맵을 구성하는 static mesh스폰하는 함수 등록
-	GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::SpawnMinimapVoxel);
-	GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::SpawnMinimapCamera);
+	CPathAStar::UsingCimbingGliding = bUsingClimbingGliding;
+	CPathAStar::GlidingGradient = GlidingGradient;
+	//GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::SpawnMinimapVoxel);
+	//GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::SpawnMinimapCamera);
 
 	if ( bUsingBakedData )
 	{//baking된 복셀데이터가 있다면 loading,없다면 복셀 생성후 복셀데이터 baking
@@ -72,11 +74,17 @@ void ACPathVolumeHermes::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	
     if (PlayerController)
     {
-        FRotator PlayerControlRotation = PlayerController->GetControlRotation();
-		SpringArm->SetWorldLocation(FVector(0, 0, -VolumeBox->GetScaledBoxExtent().Z * 2.0f) + PlayerController->GetPawn()->GetActorLocation()); 
-        SpringArm->SetWorldRotation(PlayerControlRotation);
+		if ( PlayerController->GetPawn() )
+		{
+			if ( IsValid(MinimapPlayerActor) )
+				MinimapPlayerActor->SetActorLocation(FVector(0 , 0 , -VolumeBox->GetScaledBoxExtent().Z * 10.0f) + PlayerController->GetPawn()->GetActorLocation());
+			FRotator PlayerControlRotation = PlayerController->GetControlRotation();
+			SpringArm->SetWorldLocation(FVector(0 , 0 , -VolumeBox->GetScaledBoxExtent().Z * 10.0f) + PlayerController->GetPawn()->GetActorLocation());
+			SpringArm->SetWorldRotation(PlayerControlRotation);
+		}
     }
 }
 
@@ -87,13 +95,14 @@ void ACPathVolumeHermes::CalcFitness(CPathAStarNode& Node , FVector TargetLocati
 	Node.DistanceSoFar = Node.PreviousNode->DistanceSoFar + FVector::Distance(Node.PreviousNode->WorldLocation, Node.WorldLocation);//현재노드까지 거리누적
 	
 	
+
 	if (ExtractIsGroundFromData(Node.TreeUserData))
 	{
 		Node.DistanceSoFar += 180;
 	}
 	if (ExtractIsWallFromData(Node.TreeUserData))
 	{
-		Node.DistanceSoFar += 100;
+		Node.DistanceSoFar += 120;
 	}
 	
 	Node.FitnessResult = Node.DistanceSoFar + 3.5f * FVector::Distance(Node.WorldLocation, TargetLocation);//FitnessResult: A*평가값, 낮을수록 우선순위
@@ -139,6 +148,8 @@ void ACPathVolumeHermes::SpawnMinimapCamera()
 	check(SceneCapturePostProcessMaterial);
 	
 
+	MinimapPlayerActor = GetWorld()->SpawnActor(MinimapPlayerActorClass);
+
 	ASceneCapture2D* MinimapSceneCapture2D = GetWorld()->SpawnActor<ASceneCapture2D>(ASceneCapture2D::StaticClass());
 	MinimapSceneCapture2D->AttachToComponent(SpringArm, FAttachmentTransformRules::KeepRelativeTransform);
 	
@@ -154,15 +165,14 @@ void ACPathVolumeHermes::SpawnMinimapCamera()
 			CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
             CaptureComponent->bCaptureEveryFrame = true;
 
+			
+
+			CaptureComponent->ShowFlags.DisableAdvancedFeatures();
+			CaptureComponent->ShowFlags.SetFog(false);
+			CaptureComponent->ShowFlags.SetPostProcessMaterial(true);
 			CaptureComponent->PostProcessBlendWeight = 1.0f;
-
-			CaptureComponent->ShowFlags.SetAtmosphere(false); // 대기 중 안개 비활성화
-			CaptureComponent->ShowFlags.SetVolumetricFog(false); // 볼류메트릭 안개 비활성화
-			CaptureComponent->ShowFlags.SetDynamicShadows(false); // 동적 그림자 비활성화
-			//CaptureComponent->ShowFlags.DisableAdvancedFeatures();
-			//CaptureComponent->ShowFlags.SetPostProcessing(false);
-
 			CaptureComponent->PostProcessSettings.AddBlendable(SceneCapturePostProcessMaterial, 1.0f);
+			
 			
         }
 	}
@@ -170,12 +180,9 @@ void ACPathVolumeHermes::SpawnMinimapCamera()
 
 void ACPathVolumeHermes::SpawnMinimapVoxel()
 {
-	//    0. Voxel 멀티쓰레드 생성작업 wait(delegate를 이용해서 대기)
-	//    1. Octree포인터 Get(this->Octrees)
-	//    2. OuterIndex loop돌기(NodeCount[3] 배열 이용)
-	//    3. 만약 해당 Octree가 벽이나 바닥일시 SpawnMinimapStaticMesh호출
 	uint32 OuterNodeCount = NodeCount[0] * NodeCount[1] * NodeCount[2];//OuterNodeCount: 0depth인 voxel의 개수
 	ensure(MinimapVoxelMesh);
+	
 	HISMComponent->SetStaticMesh(MinimapVoxelMesh);
 	HISMComponent->SetMaterial(0, MinimapMaterial);
 	for (uint32 i = 0; i < OuterNodeCount; i++) 
@@ -185,12 +192,13 @@ void ACPathVolumeHermes::SpawnMinimapVoxel()
 		if ( !Octree->GetIsFree() )
 		{
 			FVector VoxelLocation = WorldLocationFromTreeID(i);
-			FVector VoxelLocationOffset = FVector(0 , 0 , -VolumeBox->GetScaledBoxExtent().Z * 2.f);
+			FVector VoxelLocationOffset = FVector(0 , 0 , -VolumeBox->GetScaledBoxExtent().Z * 10.f);
 			InstanceTransform.SetLocation(VoxelLocation + VoxelLocationOffset);
 			InstanceTransform.SetScale3D(FVector(VoxelSize / 100.f));
 			HISMComponent->AddInstance(InstanceTransform);
 		}
 	}
+	HISMComponent->SetCullDistances(0 , 20000);
 	HISMComponent->SetRenderCustomDepth(true);
     HISMComponent->CustomDepthStencilValue = 1;
 

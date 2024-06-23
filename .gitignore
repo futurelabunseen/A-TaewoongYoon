@@ -4,8 +4,10 @@ BakedData/
 # Unreal Asset
 Content/Gothic_Cathedral/
 Content/Maps/Main.umap
-
-
+Content/Maps/Main2.umap
+Content/LookoutTower
+Content/__ExternalActors__
+Content/__ExternalObjects__
 
 # Visual Studio 2015 user specific files
 .vs/

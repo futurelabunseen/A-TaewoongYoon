@@ -52,8 +52,8 @@ void ACPathVolumeHermes::BeginPlay()
 	//voxel octree를 순회하며 3D 미니맵을 구성하는 static mesh스폰하는 함수 등록
 	CPathAStar::UsingCimbingGliding = bUsingClimbingGliding;
 	CPathAStar::GlidingGradient = GlidingGradient;
-	//GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::SpawnMinimapVoxel);
-	//GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::SpawnMinimapCamera);
+	GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::SpawnMinimapVoxel);
+	GenerationCompleteDelegate.AddDynamic(this , &ACPathVolumeHermes::SpawnMinimapCamera);
 
 	if ( bUsingBakedData )
 	{//baking된 복셀데이터가 있다면 loading,없다면 복셀 생성후 복셀데이터 baking
